@@ -136,8 +136,7 @@ const toggleProfile = () => {
 }
 
 const logout = async () => {
- await userStore.logout()
- router.push('/')
+  await userStore.logout()
 }
 
 onMounted(() => {
