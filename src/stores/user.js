@@ -1,6 +1,7 @@
 // stores/user.js
 import { defineStore } from 'pinia'
 import api from '@/api'
+import axios from 'axios'
 
 export const useUserStore = defineStore('user', {
  state: () => ({
@@ -33,10 +34,25 @@ export const useUserStore = defineStore('user', {
        throw error
      }
    },
-   logout() {
-     localStorage.removeItem('token')
-     this.user = null
-     this.isAuthenticated = false
+   async logout() {
+    try {
+      const token = localStorage.getItem('token')
+
+      await api.post('/logout', {}, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      // 로그아웃 성공 후 처리
+      localStorage.removeItem('token'); // 토큰 제거
+
+    } catch (error) {
+      console.error('로그아웃 실패:',error)
+    }
+    //  localStorage.removeItem('token')
+    //  this.user = null
+    //  this.isAuthenticated = false
    },
    checkAuth() {
     const token = localStorage.getItem('token')
