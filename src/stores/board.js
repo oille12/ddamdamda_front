@@ -9,12 +9,13 @@ export const useBoardStore = defineStore('board', {
    totalPages: 0,
    currentPage: 1,
    comments: [],
-   boardImages: []
+   boardImages: [],
+   username: null 
  }),
 
 
  actions: {
-   async getBoards(pageRequest) {
+  async getBoards(pageRequest) {
     try{
       const requestData = {
         pageNum: pageRequest.pageNum || 1,
@@ -52,15 +53,29 @@ export const useBoardStore = defineStore('board', {
       throw error
     }
   },
+  
+  async fetchUsername(userId) {
+    try {
+      const response = await api.get(`/user/findusername/${userId}`)
+      this.username = response.data
+      return response.data
+    } catch (error) {
+      console.error('닉네임 조회 실패:', error)
+      return null
+    }
+  },
 
   async getBoard(id) {
     try {
       await this.increaseViewCount(id)
       const response = await api.get(`/board/${id}`)
       this.board = response.data
+      if(this.board.userId) {
+        await this.fetchUsername(this.board.userId)
+      }
       return response.data
     } catch (error) {
-      console.error('Get board error:', error)
+      console.error('게시글 불러오기 에러:', error)
       throw error
     }
   },
@@ -142,17 +157,58 @@ export const useBoardStore = defineStore('board', {
 
   async updateBoard(boardData) {
     try {
-      const requestData = {
+      const formData = new FormData()
+      
+      // 게시글 데이터를 JSON으로 변환하여 추가
+      formData.append('board', new Blob([JSON.stringify({
         id: boardData.id,
         title: boardData.title,
         content: boardData.content
+      })], { type: 'application/json' }))
+      
+      // 이미지 파일 추가
+      if (boardData.newImages) {
+        boardData.newImages.forEach(file => {
+          formData.append('images', file)
+        })
       }
 
-      console.log('게시글 수정 요청 데이터:', requestData)
-      const response = await api.put('/board', requestData)
+      const response = await api.put('/board', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      })
       return response.data
+
     } catch (error) {
-      console.error('Update board error:', error)
+      console.error('게시글 수정 에러:', error)
+      throw error
+    }
+  },
+
+  async updateBoardWithImages(boardData, newImages) {
+    try {
+      // 1. 기본 게시글 정보 업데이트
+      const updateResponse = await this.updateBoard(boardData)
+      
+      // 2. 새로운 이미지가 있다면 업로드
+      if (newImages && newImages.length > 0) {
+        const formData = new FormData()
+        
+        // 게시글 ID 추가
+        formData.append('boardId', boardData.id)
+        
+        // 새로운 이미지들 추가
+        newImages.forEach(file => {
+          formData.append('images', file)
+        })
+        
+        await api.post('/boardimage', formData)
+      }
+      
+      return updateResponse
+    } catch (error) {
+      console.error('게시글 및 이미지 업데이트 에러:', error)
       throw error
     }
   },
