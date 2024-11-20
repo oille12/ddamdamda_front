@@ -17,12 +17,12 @@ export const useBoardStore = defineStore('board', {
    async getBoards(pageRequest) {
     try{
       const requestData = {
-        pageNum: pageRequest.pageNum,
-        pageSize: pageRequest.pageSize,
+        pageNum: pageRequest.pageNum || 1,
+        pageSize: 5,
         search: pageRequest.search || null,
         keyword: pageRequest.keyword || null,
-        orderBy: pageRequest.orderBy || null,
-        orderDir: pageRequest.orderDir || null
+        orderBy: pageRequest.orderBy || 'created_at',
+        orderDir: pageRequest.orderDir || 'DESC'
       }
       console.log('게시글 목록 요청 데이터:', requestData)
       const response = await api.post('/board/page', requestData)
@@ -30,10 +30,14 @@ export const useBoardStore = defineStore('board', {
       if (response.data) {
         this.boards = response.data.list
         this.totalPages = response.data.pages
+        this.currentPage = pageRequest.pageNum
         return response.data
       }
     } catch (error) {
       console.error('게시글 목록 로드 에러:',error)
+      this.boards = []
+      this.totalPages = 0
+      this.currentPage = 1
       throw error
     }
   },

@@ -1,6 +1,22 @@
 <template>
-  <div class="max-w-7xl mx-auto px-6 py-20">
+  <!-- 페이지 타이틀 섹션 -->
+  <div class="shadow-sm">
+  <div class="max-w-7xl mx-auto px-8 pt-20">
+    <div class="py-12">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-4xl font-bold text-gray-900">커뮤니티</h1>
+          <p class="mt-2 text-gray-600">함께 운동하는 즐거움, 자유롭게 소통하세요</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <div class="max-w-7xl mx-auto px-6 pt-8 pb-20">
     <div class="bg-white rounded-2xl shadow-lg overflow-hidden mb-8">
+
+
       <!-- 게시글 헤더 -->
       <div class="p-6 border-b border-gray-100">
         <div class="flex items-center gap-3 mb-4">
@@ -20,10 +36,12 @@
           </div>
 
           <div class="flex gap-2" v-if="isAuthor">
-            <button @click="editBoard" class="text-gray-600 hover:text-gray-900">
+            <button @click="editBoard" 
+              class="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 text-sm">
               수정
             </button>
-            <button @click="deleteBoard" class="text-gray-600 hover:text-gray-900">
+            <button @click="deleteBoard" 
+              class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm">
               삭제
             </button>
           </div>
@@ -41,7 +59,7 @@
           class="grid grid-cols-2 md:grid-cols-3 gap-4 mt-6">
         <div v-for="image in boardStore.boardImages" 
             :key="image.id" 
-            class="relative aspect-square rounded-lg overflow-hidden">
+            class="relative aspect-square rounded-lg overflow-hidden shadow">
           <!-- 로딩 중 표시 -->
           <div v-if="!image.imageUrl" 
               class="w-full h-full flex items-center justify-center bg-gray-100">
@@ -68,7 +86,7 @@
             </svg>
             {{ board?.likesCount }}
           </button>
-          <router-link to="/board" class="text-gray-600 hover:text-gray-900">
+          <router-link to="/board" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm">
             목록으로
           </router-link>
         </div>
