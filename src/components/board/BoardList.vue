@@ -69,10 +69,15 @@
     <!-- 페이지네이션 -->
     <div class="flex justify-center items-center gap-2 mt-6">
       <button
-        v-for="page in totalPages"
+        v-for="page in boardStore.totalPages"
         :key="page"
         class="w-8 h-8 rounded-full"
-        :class="currentPage === page ? 'bg-black text-[#dcff1f]' : 'bg-gray-100'"
+        :class="[
+        'px-3 py-1 mx-1 rounded',
+        currentPage === page 
+          ? 'bg-black text-[#dcff1f]' 
+          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+        ]"
         @click="changePage(page)"
       >
         {{ page }}
@@ -87,9 +92,9 @@ import { storeToRefs } from 'pinia'
 import { useBoardStore } from '@/stores/board'
 
 const boardStore = useBoardStore()
-const { boards, totalPages } = storeToRefs(boardStore)
+const { boards, totalPages, currentPage  } = storeToRefs(boardStore)
 
-const currentPage = ref(1)
+// const currentPage = ref(1)
 const category = ref('전체')
 const searchKeyword = ref('')
 const orderBy = ref('created_at')
@@ -98,20 +103,8 @@ const categories = ['전체', '자유', '운동인증']
 
 // 검색
 const handleSearch = async() => {
-  try {
-    const pageRequest = {
-      pageNum: currentPage.value,
-      pageSize: 20,
-      search: searchKeyword.value || null,
-      keyword: searchKeyword.value ? 'title,content' : null,
-      orderBy: orderBy.value,
-      orderDir: orderDir.value
-    }
-    console.log('검색 요청:', pageRequest)
-    await boardStore.getBoards(pageRequest)
-  } catch(error) {
-    console.error('검색 실패:', error)
-  }
+  currentPage.value = 1
+  await loadBoards(1)
 }
 
 // 정렬
@@ -144,10 +137,10 @@ const filteredBoards = computed(() => {
   return filtered.filter(board => board.category === category.value)
 })
 
-const loadBoards = async () => {
+const loadBoards = async (pageNum = 1) => {
     const pageRequest = {
-      pageNum: currentPage.value,
-      pageSize: 5, // 10 으로 수정 예정
+      pageNum: pageNum || currentPage.value,
+      pageSize: 5, // 10 으로 수정 ?
       orderBy: orderBy.value,
       orderDir: orderDir.value
     }
@@ -168,11 +161,13 @@ const loadBoards = async () => {
 
 const changePage = (page) => {
   currentPage.value = page
+  loadBoards(page)
 }
 
-watch(() => currentPage.value, () => {
-  loadBoards()
-})
+watch([searchKeyword, orderBy, orderDir], async() => {
+  currentPage.value = 1
+  await loadBoards(1)
+}, {immediate: true})
 
 onMounted(() => {
   loadBoards()
