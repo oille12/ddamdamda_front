@@ -98,7 +98,14 @@ export const useUserStore = defineStore('user', {
           'Content-Type': 'multipart/form-data'
         }
       })
-      return response.data
+
+      console.log('이미지 업로드 응답:', response)
+
+      if (response.data) {
+        return response.data  // imageId 반환
+      } else {
+        throw new Error('이미지 업로드 실패: ID를 못 받았습니다.')
+      }
     } catch(error) {
       console.error('이미지 업로드 실패:',error)
       throw error
@@ -119,6 +126,20 @@ export const useUserStore = defineStore('user', {
     }
   },
 
+  // 닉네임 중복 체크
+  async checkUsernameAvailable(username) {
+    try {
+      const response = await api.get(`/user/vaildname/${username}`)
+      return true
+    } catch (error) {
+      if(error.response?.state === 409) {
+        return false
+      }
+      console.error('닉네임 중복 체크 실패:', error)
+      throw error
+    }
+  },
+
   // 프로필 수정
   async updateProfile(profileData) {
     try {
@@ -127,16 +148,16 @@ export const useUserStore = defineStore('user', {
         id: this.userProfile.id,
         email: this.userProfile.email,
         username: profileData.username,
-        password: profileData.password || null
+        password: profileData.password || null,
+        profileImageId: profileData.profileImageId || this.userProfile.profileImageId
       }
 
       formData.append('userData', new Blob([JSON.stringify(userData)], {
         type: 'application/json'
       }))
 
-      // formData.append('file', profileData.imageFile)
       if (profileData.imageFile) {
-        formData.append('file', profileData.imageFile)
+        formData.append('imageFile', profileData.imageFile)
       }
       
       const response = await api.post('/user/edit', formData, {
