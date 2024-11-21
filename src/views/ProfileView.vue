@@ -54,8 +54,14 @@
               <input
                 v-model="userProfile.username"
                 type="text"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-500"
+                class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-gray-500"
+                :class="{ 'border-gray-300': !hasUsernameError, 'border-red-500': hasUsernameError }"
+                @blur="checkUsernameValidity"
+                @input="isUsernameTouched = true"
               />
+              <p v-if="hasUsernameError" class="text-sm text-red-500 mt-1">
+                {{ hasUsernameError }}
+              </p>
             </div>
   
             <div>
@@ -64,8 +70,11 @@
                 v-model="password"
                 type="password"
                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-500"
+                :class="{ 'border-gray-300': !hasPasswordError, 'border-red-500': hasPasswordError }"
+                @blur="checkPasswordValidity"
+                @input="isPasswordTouched = true"
               />
-              <p class="text-sm text-gray-500 mt-1">비밀번호는 6-14자로 입력해주세요</p>
+              <p v-if="hasPasswordError"  class="text-sm text-gray-500 mt-1">비밀번호는 6-14자로 입력해주세요</p>
             </div>
   
             <div>
@@ -83,7 +92,7 @@
             <div class="flex justify-between pt-4">
               <button 
                 @click="confirmDelete" 
-                class="text-red-500 hover:text-red-600"
+                class="px-6 py-2 text-red-600 hover:text-red-700 rounded-full border border-red-600 hover:border-red-700"
               >
                 회원탈퇴
               </button>
@@ -112,17 +121,56 @@
   const selectedFile = ref(null)
   const imageUrl = ref(null);
 
+  const isUsernameTouched = ref(false)
+  const originalUsername = ref('') 
+  const hasUsernameError = ref('')
+
   const password = ref('')
   const passwordConfirm = ref('')
+  const isPasswordTouched = ref(false);
   
   const passwordMatch = computed(() => {
     if (!passwordConfirm.value) return true
     return password.value === passwordConfirm.value
   })
+
+  const isPasswordValid = computed(() => {
+    return password.value.length >= 6 && password.value.length <= 14;
+  })
   
+  // 에러 표시 조건
+  const hasPasswordError = computed(() => {
+    return isPasswordTouched.value && !isPasswordValid.value;
+  });
+
+  const checkPasswordValidity = () => {
+    isPasswordTouched.value = true;
+  };
+
   const currentImageUrl = computed(() => {
     return profileImageUrl.value || imageUrl.value
   })
+
+  const checkUsernameValidity = async () => {
+    isUsernameTouched.value = true
+    
+    // 본인의 닉네임과 같으면 유효
+    if (userProfile.value.username === originalUsername.value) {
+      hasUsernameError.value = ''
+      return
+    }
+
+    try {
+      await userStore.checkUsernameAvailable(userProfile.value.username)
+      hasUsernameError.value = ''
+    } catch (error) {
+      if (error.response?.data?.text) {
+        hasUsernameError.value = error.response.data.text
+      } else {
+        hasUsernameError.value = '닉네임 중복 확인에 실패했습니다.'
+      }
+    }
+}
 
   const triggerFileInput = () => {
     fileInput.value.click()
@@ -139,14 +187,26 @@
       }
       reader.readAsDataURL(file)
 
-      // 선택된 파일 저장
-      selectedFile.value = file
+      // 이미지 업로드 및 ID 받기
+      const imageId = await userStore.uploadProfileImage(file)
+      console.log('새로운 이미지 업로드 결과:', imageId)
 
-      // // 이미지 업로드
-      // const response = await userStore.uploadProfileImage(file)
-      // uploadedImageId.value = response.id // 업로드된 이미지 ID 저장
+      if(imageId) {
+        // 프로필 수정
+        await userStore.updateProfile({
+          username: userProfile.value.username,
+          profileImageId: imageId,
+          imageFile: file
+        })
+      }
+
+      await loadProfileImage()
+      
       } catch(error) {
         console.error('이미지 처리 실패:', error)
+        if (error.response) {
+          console.log('에러 응답:', error.response)
+        }
         alert('이미지 처리에 실패했습니다.')
       }
     } 
@@ -164,6 +224,14 @@
   }
   
   const updateProfile = async () => {
+    if(hasUsernameError.value) {
+      alert('사용할 수 없는 닉네임입니다.')
+      return
+    }
+    if (password.value && !isPasswordValid.value) {
+      alert('비밀번호는 6-14자로 입력해주세요.')
+      return
+    }
     if (password.value && !passwordMatch.value) {
       alert('비밀번호가 일치하지 않습니다.')
       return
@@ -174,12 +242,19 @@
         email: userProfile.value.email,
         username: userProfile.value.username,
         password: password.value || null,
-        imageFile: selectedFile.value || null
+        // imageFile: selectedFile.value || null
+        profileImageId: userProfile.value.profileImageId // 현재 프로필 이미지 ID 전달
       })
 
+      originalUsername.value = userProfile.value.username
+      
       password.value = ''
       passwordConfirm.value = ''
       selectedFile.value = null
+      isPasswordTouched.value = false 
+      isUsernameTouched.value = false
+      hasUsernameError.value = false
+      await loadProfileImage() // 이미지 재로드
 
       alert('프로필이 수정되었습니다.')
     } catch (error) {
@@ -196,22 +271,16 @@
   }
   
   onMounted(async () => {
-    // TODO: userStore에서 현재 사용자 정보 가져오기
-    // const currentUser = await userStore.getCurrentUser()
-    // if (currentUser) {
-    //   userInfo.value = {
-    //     email: currentUser.email,
-    //     nickname: currentUser.nickname,
-    //     profileImage: currentUser.profileImage
-    //   }
-    //   if (currentUser.profileImage) {
-    //     previewImage.value = currentUser.profileImage
-    //   }
-    // }
-
     try {
       await userStore.getCurrentUserProfile()
       await loadProfileImage()
+
+      originalUsername.value = userProfile.value.username
+      isPasswordTouched.value = false
+      isUsernameTouched.value = false
+      hasUsernameError.value = false
+      password.value = ''
+      passwordConfirm.value = ''
     } catch (error) {
       console.error('프로필 로드 실패:', error)
     }
