@@ -197,7 +197,16 @@ export const useUserStore = defineStore('user', {
       console.error('프로필 업데이트 실패:',error)
       throw error
     }
-  }
-
+  },
+  
+  async deleteAccount(userId) {
+    try {
+      const response = await api.delete(`/user/${userId}`)
+      return response.data
+    } catch(error) {
+      console.error('탈퇴 에러 :', error)
+      throw error
+    }
+  },
  }
 })

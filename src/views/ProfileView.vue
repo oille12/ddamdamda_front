@@ -113,7 +113,8 @@
   import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
   import { useUserStore } from '@/stores/user'
   import { storeToRefs } from 'pinia'
-  
+  import router from '@/router';
+    
   const userStore = useUserStore()
   const { userProfile, profileImageUrl } = storeToRefs(userStore)
 
@@ -138,7 +139,6 @@
     return password.value.length >= 6 && password.value.length <= 14;
   })
   
-  // 에러 표시 조건
   const hasPasswordError = computed(() => {
     return isPasswordTouched.value && !isPasswordValid.value;
   });
@@ -263,11 +263,19 @@
     }
   }
   
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (confirm('정말 탈퇴하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
-      // TODO: userStore에 deleteAccount 메서드 구현 필요
-      userStore.deleteAccount()
-    }
+      try {
+        const userId = userProfile.value.id
+        await userStore.deleteAccount(userId)
+        await userStore.logout()
+        alert('탈퇴가 완료되었습니다. 이용해 주셔서 감사합니다.')
+        router.push('/singup')
+      } catch(error) {
+        console.error('계정 탈퇴 실패:', error)
+        alert('탈퇴 시도에 실패했습니다.')
+      }      
+    }  
   }
   
   onMounted(async () => {
