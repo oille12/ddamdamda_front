@@ -7,7 +7,8 @@ export const useUserStore = defineStore('user', {
    user: null,
    isAuthenticated: false,
    userProfile: null,
-   profileImageUrl: null
+   profileImageUrl: null,
+   token: null
  }),
  actions: {
   async login(credentials) {
@@ -17,6 +18,7 @@ export const useUserStore = defineStore('user', {
 
       // 토큰 저장
       localStorage.setItem('token', access_token)
+      this.token = access_token
       
       // 토큰에서 사용자 정보 추출
       const decoded = JSON.parse(atob(access_token.split('.')[1]))
@@ -26,44 +28,67 @@ export const useUserStore = defineStore('user', {
       }
 
       this.isAuthenticated = true
-      console.log('Login success')
+
+      await this.getCurrentUserProfile()
+      if (this.userProfile?.profileImageId) {
+        await this.getProfileImage(this.userProfile.profileImageId)
+      }
+
+      console.log('로그인 성공')
     } catch (error) {
-      console.error('Login error:', error)
+      console.error('로그인 실패:', error)
       throw error
     }
   },
   async logout() {
     try {
       const token = localStorage.getItem('token')
-
-      await api.post('/logout', {}, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      if (token) {
+        await api.post('/logout', {}, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
+      }
       
-      // 로그아웃 성공 후 토큰 제거
-      localStorage.removeItem('token');
-
+      console.log('로그아웃 성공')
     } catch (error) {
       console.error('로그아웃 실패:',error)
+    } finally {
+      // 상태 초기화
+      localStorage.removeItem('token')
+      this.token = null
+      this.user = null
+      this.userProfile = null
+      this.profileImageUrl = null
+      this.isAuthenticated = false
     }
   },
-  checkAuth() {
+
+  async checkAuth() {
     const token = localStorage.getItem('token')
     if (token) {
       try {
+        this.token = token
         const decoded = JSON.parse(atob(token.split('.')[1]))
         this.user = {
           id: decoded.id,
           email: decoded.sub
         }
         this.isAuthenticated = true
+
+        await this.getCurrentUserProfile()
+        if (this.userProfile?.profileImageId) {
+          this.getProfileImage(this.userProfile.profileImageId)
+        }
+        return true
       } catch (error) {
         console.error('Token decode error:', error)
-        this.logout()
+        await this.logout()
+        return false
       }
     }
+    return false
   },
   async getUserProfile(userId) {
     try {
@@ -76,7 +101,6 @@ export const useUserStore = defineStore('user', {
     }
   },
 
-  // 현재 로그인한 사용자 정보 조회
   async getCurrentUserProfile() {
     try {
       if (!this.user?.id) return null
