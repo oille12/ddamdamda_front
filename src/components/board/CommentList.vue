@@ -32,7 +32,6 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { storeToRefs } from 'pinia'
 import { useBoardStore } from '@/stores/board'
 import { useUserStore } from '@/stores/user'
 

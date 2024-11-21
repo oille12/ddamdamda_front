@@ -86,7 +86,6 @@
  
  const router = useRouter()
  const boardStore = useBoardStore()
- const userStore = useUserStore()
  
  const form = reactive({
    category: '',
@@ -131,7 +130,7 @@
       images: form.images
     }
     
-    console.log('전송 데이터:', formData)  // 디버깅용
+    console.log('전송 데이터:', formData)
     await boardStore.createBoard(formData)
     router.push('/board')
   } catch(error) {
@@ -146,7 +145,6 @@
  </script>
  
  <style scoped>
- /* Optional: Add hover effect for preview images */
  .group:hover img {
    opacity: 0.7;
  }

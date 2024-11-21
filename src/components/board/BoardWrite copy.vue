@@ -1,6 +1,5 @@
 <template>
  <div class="max-w-3xl mx-auto px-6">
-  
   <!-- 페이지 타이틀 섹션 -->
   <div class="max-w-7xl mx-auto px-8 pt-16">
     <div class="py-10">
@@ -89,18 +88,14 @@ const form = reactive({
 
 const router = useRouter()
 const boardStore = useBoardStore()
-const userStore = useUserStore()
 
-// const category = ref('')
-// const title = ref('')
-// const content = ref('')
 const files = ref([])
 const previewUrls = ref([])
 
 const handleFileChange = (event) => {
   const newFiles = Array.from(event.target.files)
   files.value = [...files.value, ...newFiles]
-  // 이미지 미리보기 생성
+  
   newFiles.forEach(file => {
     const reader = new FileReader()
     reader.onload = (e) => {
@@ -129,7 +124,7 @@ const submit = async () => {
       images: form.images
     }
 
-    console.log('전송 데이터:', formData)  // 디버깅용
+    console.log('전송 데이터:', formData)
     await boardStore.createBoard(formData)
     router.push('/board')
   } catch(error) {
@@ -137,8 +132,6 @@ const submit = async () => {
     alert('게시글 등록에 실패했습니다.')
   }
 }
-
-
 
 const cancel = () => {
  router.push('/board')
