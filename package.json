@@ -14,7 +14,9 @@
     "axios": "^1.7.7",
     "ddd-pr1": "file:",
     "pinia": "^2.2.6",
+    "recharts": "^2.13.3",
     "vue": "^3.5.12",
+    "vue-chartjs": "^5.3.2",
     "vue-router": "^4.4.5"
   },
   "devDependencies": {

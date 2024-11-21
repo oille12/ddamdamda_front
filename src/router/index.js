@@ -9,6 +9,7 @@ import ProfileView from '@/views/ProfileView.vue'
 import GroupView from '@/views/GroupView.vue'
 import GroupInfoWrite from '@/components/group/GroupInfoWrite.vue'
 import SignupView from '@/views/SignupView.vue'
+import DiaryView from '@/views/DiaryView.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -67,6 +68,11 @@ const router = createRouter({
       path: '/signup',
       name: 'signup',
       component: SignupView
+    },
+    {
+      path: '/diary',
+      name: 'diary',
+      component: DiaryView
     }
   ]
 })
