@@ -6,6 +6,8 @@ import BoardWrite from '@/components/board/BoardWrite.vue'
 import BoardEdit from '@/components/board/BoardEdit.vue'
 import LoginView from '@/views/LoginView.vue'
 import ProfileView from '@/views/ProfileView.vue'
+import GroupView from '@/views/GroupView.vue'
+import GroupInfoWrite from '@/components/group/GroupInfoWrite.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -45,6 +47,21 @@ const router = createRouter({
       name: 'profile',
       component: ProfileView
     },
+    {
+      path: '/group',
+      children: [
+        {
+          path: '',
+          name: 'GroupView',
+          component: GroupView
+        },
+        {
+          path: 'write',
+          name: 'GroupInfoWrite',
+          component: GroupInfoWrite
+        }
+      ]
+    }
   ]
 })
 
