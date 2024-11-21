@@ -1,40 +1,38 @@
 // stores/user.js
 import { defineStore } from 'pinia'
 import api from '@/api'
-import axios from 'axios'
 
 export const useUserStore = defineStore('user', {
  state: () => ({
    user: null,
-   isAuthenticated: false
+   isAuthenticated: false,
+   userProfile: null,
+   profileImageUrl: null
  }),
  actions: {
-   async login(credentials) {
-     try {
-        const response = await api.post('/login', credentials)
-        const { access_token } = response.data
+  async login(credentials) {
+    try {
+      const response = await api.post('/login', credentials)
+      const { access_token } = response.data
 
-        // 토큰 저장
-        localStorage.setItem('token', access_token)
-        
-        // 토큰에서 사용자 정보 추출
-        const decoded = JSON.parse(atob(access_token.split('.')[1]))
-        this.user = {
-          id: decoded.id,
-          email: decoded.sub  // JWT에서의 subject는 email
-        }
+      // 토큰 저장
+      localStorage.setItem('token', access_token)
+      
+      // 토큰에서 사용자 정보 추출
+      const decoded = JSON.parse(atob(access_token.split('.')[1]))
+      this.user = {
+        id: decoded.id,
+        email: decoded.sub  // JWT에서의 subject는 email
+      }
 
-        this.isAuthenticated = true
-        //  console.log('토큰 확인:', access_token)
-
-       console.log('Login success')
-      //  return response.data
-     } catch (error) {
-       console.error('Login error:', error)
-       throw error
-     }
-   },
-   async logout() {
+      this.isAuthenticated = true
+      console.log('Login success')
+    } catch (error) {
+      console.error('Login error:', error)
+      throw error
+    }
+  },
+  async logout() {
     try {
       const token = localStorage.getItem('token')
 
@@ -44,17 +42,14 @@ export const useUserStore = defineStore('user', {
         }
       });
       
-      // 로그아웃 성공 후 처리
-      localStorage.removeItem('token'); // 토큰 제거
+      // 로그아웃 성공 후 토큰 제거
+      localStorage.removeItem('token');
 
     } catch (error) {
       console.error('로그아웃 실패:',error)
     }
-    //  localStorage.removeItem('token')
-    //  this.user = null
-    //  this.isAuthenticated = false
-   },
-   checkAuth() {
+  },
+  checkAuth() {
     const token = localStorage.getItem('token')
     if (token) {
       try {
@@ -69,6 +64,95 @@ export const useUserStore = defineStore('user', {
         this.logout()
       }
     }
-   }
+  },
+  async getUserProfile(userId) {
+    try {
+      const response = await api.get(`/user/${userId}`)
+      this.userProfile = response.data
+      return response.data
+    } catch (error) {
+      console.error('사용자 정보 조회 실패:', error)
+      throw error
+    }
+  },
+
+  // 현재 로그인한 사용자 정보 조회
+  async getCurrentUserProfile() {
+    try {
+      if (!this.user?.id) return null
+      return await this.getUserProfile(this.user.id)
+    } catch (error) {
+      console.error('현재 사용자 정보 조회 실패:', error)
+      throw error
+    }
+  },
+  
+  // 이미지 업로드
+  async uploadProfileImage(file) {
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const response = await api.post('/images/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      })
+      return response.data
+    } catch(error) {
+      console.error('이미지 업로드 실패:',error)
+      throw error
+    }
+  },
+
+  // 이미지 조회
+  async getProfileImage(imageId) {
+    try {
+      const response = await api.get(`/images/${imageId}`, {
+        responseType: 'blob'
+      })
+      this.profileImageUrl = URL.createObjectURL(response.data)
+      return this.profileImageUrl
+    } catch (error) {
+      console.error('이미지 조회 실패:',error)
+      throw error
+    }
+  },
+
+  // 프로필 수정
+  async updateProfile(profileData) {
+    try {
+      const formData = new FormData()
+      const userData = {
+        id: this.userProfile.id,
+        email: this.userProfile.email,
+        username: profileData.username,
+        password: profileData.password || null
+      }
+
+      formData.append('userData', new Blob([JSON.stringify(userData)], {
+        type: 'application/json'
+      }))
+
+      // formData.append('file', profileData.imageFile)
+      if (profileData.imageFile) {
+        formData.append('file', profileData.imageFile)
+      }
+      
+      const response = await api.post('/user/edit', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      })
+
+      await this.getCurrentUserProfile()
+      return response.data
+
+    } catch(error) {
+      console.error('프로필 업데이트 실패:',error)
+      throw error
+    }
+  }
+
  }
 })
