@@ -76,7 +76,7 @@
                 <!-- 현재 유저의 프로필 이미지 미리보기 -->
                 <img 
                   :src="profileImageUrl" 
-                  class="w-full h-full object-cover"
+                  class="w-full h-full rounded-full object-cover"
                   alt="Profile"
                 />
              </button>
@@ -127,7 +127,7 @@ const notificationCount = ref(0)
 
 const navLinks = [
  { path: '/board', name: '게시판' },
- { path: '/group-mate', name: '그룹 메이트' },
+ { path: '/group', name: '그룹 메이트' },
  { path: '/diary', name: '다이어리' }
 ]
 

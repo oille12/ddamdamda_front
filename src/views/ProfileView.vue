@@ -11,7 +11,7 @@
           <div class="mb-8">
             <div class="profile-image-upload">
               <div 
-                class="w-32 h-32 mx-auto relative"
+                class="w-32 h-32 mx-auto relative rounded-full"
                 @click="triggerFileInput"
               >
                 <div class="w-full h-full rounded-full overflow-hidden bg-gray-200 cursor-pointer">
