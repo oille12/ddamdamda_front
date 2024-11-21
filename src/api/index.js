@@ -23,19 +23,19 @@ api.interceptors.request.use(
   }
 
   if (token) {
-    config.headers.Authorization = `Bearer ${token}`
+    config.headers['Authorization'] = `Bearer ${token}`
+      console.log('요청 헤더 설정:', {
+        url: config.url,
+        method: config.method,
+        token: token.substring(0, 20) + '...',  // 토큰 일부만 로그
+        headers: config.headers
+      })
+    }
+    return config
+  },
+  error => {
+    return Promise.reject(error)
   }
-
-  //  if (token) {
-  //   // console.log('Sending token:', token)
-  //    config.headers.Authorization = `Bearer ${token}`
-  //    console.log('요청 헤더:', config.headers)
-  //  }
-   return config
- },
- error => {
-   return Promise.reject(error)
- }
 )
 
 // 응답 인터셉터 추가

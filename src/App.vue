@@ -73,7 +73,12 @@
            <div class="relative">
              <button @click="toggleProfile" 
                      class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-               {{ userStore.user?.username?.[0] }}
+                <!-- 현재 유저의 프로필 이미지 미리보기 -->
+                <img 
+                  :src="profileImageUrl" 
+                  class="w-full h-full object-cover"
+                  alt="Profile"
+                />
              </button>
              <!-- Profile Dropdown -->
              <div v-if="showProfile" 
@@ -107,14 +112,15 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted  } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
+import { storeToRefs } from 'pinia'
 
 const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
-
+const { userProfile, profileImageUrl } = storeToRefs(userStore)
 const showNotifications = ref(false)
 const showProfile = ref(false)
 const notificationCount = ref(0)
@@ -127,19 +133,40 @@ const navLinks = [
 
 const toggleNotifications = () => {
  showNotifications.value = !showNotifications.value
- showProfile.value = false
+ if (showNotifications.value) {
+    showProfile.value = false
+  }
+}
+
+const loadProfileImage = async() => {
+  try {
+    await userStore.getCurrentUserProfile()
+    if (userStore.userProfile) {
+      await userStore.getProfileImage(userStore.userProfile.profileImageId)
+    }
+  } catch(error) {
+    console.error('헤더 프로필 이미지 로드 실패:',error)
+  }
 }
 
 const toggleProfile = () => {
  showProfile.value = !showProfile.value
- showNotifications.value = false
+ if (showProfile.value) {
+    showNotifications.value = false
+  }
 }
 
 const logout = async () => {
   await userStore.logout()
 }
 
+const initialize = async () => {
+  if (userStore.isAuthenticated) {
+    await loadProfileImage()
+  }
+}
+
 onMounted(() => {
-  userStore.checkAuth()
+  initialize()
 })
 </script>
