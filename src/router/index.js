@@ -8,6 +8,7 @@ import LoginView from '@/views/LoginView.vue'
 import ProfileView from '@/views/ProfileView.vue'
 import GroupView from '@/views/GroupView.vue'
 import GroupInfoWrite from '@/components/group/GroupInfoWrite.vue'
+import SignupView from '@/views/SignupView.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -61,6 +62,11 @@ const router = createRouter({
           component: GroupInfoWrite
         }
       ]
+    },
+    {
+      path: '/signup',
+      name: 'signup',
+      component: SignupView
     }
   ]
 })
