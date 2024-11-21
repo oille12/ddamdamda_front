@@ -242,7 +242,6 @@
         email: userProfile.value.email,
         username: userProfile.value.username,
         password: password.value || null,
-        // imageFile: selectedFile.value || null
         profileImageId: userProfile.value.profileImageId // 현재 프로필 이미지 ID 전달
       })
 
