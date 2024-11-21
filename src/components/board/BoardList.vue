@@ -69,7 +69,7 @@
     <!-- 페이지네이션 -->
     <div class="flex justify-center items-center gap-2 mt-6">
       <button
-        v-for="page in boardStore.totalPages"
+        v-for="page in totalPages"
         :key="page"
         class="w-8 h-8 rounded-full"
         :class="[
@@ -92,84 +92,85 @@ import { storeToRefs } from 'pinia'
 import { useBoardStore } from '@/stores/board'
 
 const boardStore = useBoardStore()
-const { boards, totalPages, currentPage  } = storeToRefs(boardStore)
 
-// const currentPage = ref(1)
+const PAGE_SIZE = 5
+const currentPage = ref(1)
 const category = ref('전체')
 const searchKeyword = ref('')
 const orderBy = ref('created_at')
 const orderDir = ref('DESC')
 const categories = ['전체', '자유', '운동인증']
+const allBoards = ref([])
+
+// 전체 게시글 로드
+const loadAllBoards = async () => {
+  const pageRequest = {
+    pageNum: 1,
+    pageSize: 1000, // 충분히 큰 수로 설정
+    orderBy: orderBy.value,
+    orderDir: orderDir.value
+  }
+
+  if (searchKeyword.value) {
+    pageRequest.search = searchKeyword.value
+    pageRequest.keyword = 'title,content'
+  }
+
+  try {
+    const response = await boardStore.getBoards(pageRequest)
+    allBoards.value = response.list || []
+  } catch(error) {
+    console.error('게시글 로드 실패:', error)
+    allBoards.value = []
+  }
+}
 
 // 검색
 const handleSearch = async() => {
   currentPage.value = 1
-  await loadBoards(1)
+  await loadAllBoards()
 }
 
 // 정렬
 const handleSort = async () => {
-  try {
-    const pageRequest = {
-      pageNum: currentPage.value,
-      pageSize: 20,
-      search: searchKeyword.value || null,
-      keyword: searchKeyword.value ? 'title,content' : null,
-      orderBy: orderBy.value,
-      orderDir: orderDir.value
-    }
-    
-    console.log('정렬 요청:', pageRequest)
-    await boardStore.getBoards(pageRequest)
-  } catch (error) {
-    console.error('정렬 실패:', error)
-  }
+  currentPage.value = 1
+  await loadAllBoards()
 }
 
-// 카테고리 필터링
-const filteredBoards = computed(() => {
-  if(!boards.value) return []
-  let filtered = [...boards.value]
-
-  if(category.value === '전체') {
-    return filtered
-  }
-  return filtered.filter(board => board.category === category.value)
+// 카테고리로 필터링된 게시글
+const filteredByCategory = computed(() => {
+  if (category.value === '전체') return allBoards.value
+  return allBoards.value.filter(board => board.category === category.value)
 })
 
-const loadBoards = async (pageNum = 1) => {
-    const pageRequest = {
-      pageNum: pageNum || currentPage.value,
-      pageSize: 5, // 10 으로 수정 ?
-      orderBy: orderBy.value,
-      orderDir: orderDir.value
-    }
+// 현재 페이지에 표시할 게시글
+const filteredBoards = computed(() => {
+  const startIndex = (currentPage.value - 1) * PAGE_SIZE
+  return filteredByCategory.value.slice(startIndex, startIndex + PAGE_SIZE)
+})
 
-    // 검색어가 있을 때만 search와 keyword 추가
-    if (searchKeyword.value) {
-      pageRequest.search = searchKeyword.value
-      pageRequest.keyword = 'title,content'
-    }
+// 총 페이지 수 계산
+const totalPages = computed(() => {
+  return Math.ceil(filteredByCategory.value.length / PAGE_SIZE)
+})
 
-    try {
-      console.log('페이지 로드 요청:', pageRequest)
-      await boardStore.getBoards(pageRequest)
-    } catch(error) {
-      console.error('게시글 로드 실패:', error)
-    }
-}
-
+// 페이지 변경
 const changePage = (page) => {
   currentPage.value = page
-  loadBoards(page)
 }
 
-watch([searchKeyword, orderBy, orderDir], async() => {
+// 검색어, 정렬 조건 변경 시 전체 데이터 다시 로드
+watch([searchKeyword, orderBy, orderDir], async () => {
   currentPage.value = 1
-  await loadBoards(1)
-}, {immediate: true})
+  await loadAllBoards()
+}, { immediate: true })
+
+// 카테고리 변경 시 페이지만 리셋
+watch(category, () => {
+  currentPage.value = 1
+})
 
 onMounted(() => {
-  loadBoards()
+  loadAllBoards()
 })
 </script>

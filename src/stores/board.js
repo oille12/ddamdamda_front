@@ -19,11 +19,11 @@ export const useBoardStore = defineStore('board', {
     try{
       const requestData = {
         pageNum: pageRequest.pageNum || 1,
-        pageSize: 5,
+        pageSize: pageRequest.pageSize,
         search: pageRequest.search || null,
         keyword: pageRequest.keyword || null,
         orderBy: pageRequest.orderBy || 'created_at',
-        orderDir: pageRequest.orderDir || 'DESC'
+        orderDir: pageRequest.orderDir || 'DESC',
       }
       console.log('게시글 목록 요청 데이터:', requestData)
       const response = await api.post('/board/page', requestData)
@@ -325,15 +325,16 @@ export const useBoardStore = defineStore('board', {
     }
   },
 
-   async updateComment(commentData) {
+  async updateComment(commentData) {
     try {
       const requestData = {
+        id: commentData.id,
         boardId: commentData.boardId,
         content: commentData.content
       }
       
       console.log('댓글 수정 요청 데이터:', requestData)
-      const response = await api.post('/comment', requestData)
+      const response = await api.put('/comment', requestData)
       return response.data
     } catch(error) {
       console.error('Update comment error:', error)
@@ -351,28 +352,5 @@ export const useBoardStore = defineStore('board', {
       throw error
     }
   },
-
-  // // 이미지 관련
-  // async uploadImage(file) {
-  //   try {
-  //     const formData = new FormData()
-  //     formData.append('file', file)
-  
-  //     // const response = await api.post('/images/upload', formData, {
-  //     //   headers: {
-  //     //     'Content-Type': 'multipart/form-data'
-  //     //   }
-  //     // })
-
-  //     // console.log('이미지 업로드 응답:', response.data)
-  //     // 이미지 ID 추출
-  //     // return parseInt(response.data.text.match(/(\d+)/)[0])
-
-
-  //   } catch (error) {
-  //     console.error('이미지 업로드 에러:', error)
-  //     throw error
-  //   }
-  // },
   }
 })

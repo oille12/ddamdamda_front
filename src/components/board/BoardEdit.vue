@@ -157,12 +157,10 @@ const newFiles = ref([])
 const boardId = parseInt(route.params.id)
 
 const loadBoard = async () => {
- await boardStore.getBoard(boardId)
- category.value = board.value?.category
- title.value = board.value?.title
- content.value = board.value?.content
-//  // 기존 이미지 로드
-//  existingFiles.value = await boardStore.getBoardImages(boardId)
+  await boardStore.getBoard(boardId)
+  category.value = board.value?.category
+  title.value = board.value?.title
+  content.value = board.value?.content
   await loadExistingImages()
 }
 

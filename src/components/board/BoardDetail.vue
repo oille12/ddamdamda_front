@@ -149,11 +149,11 @@
       <!-- 댓글 목록 -->
       <div class="divide-y divide-gray-100">
         <div v-if="boardStore.comments.length > 0">
-          <div v-for="comment in boardStore.comments" 
+          <div v-for="comment in comments" 
                :key="comment.id" 
                class="p-6">
             <!-- 수정 모드가 아닐 때 -->
-            <div v-if="!comment.isEditing" class="flex justify-between">
+            <div v-if="!isEditing(comment.id)" class="flex justify-between">
               <div class="space-y-2">
                 <div class="flex items-center gap-3">
                   <span class="font-medium text-sm">{{ comment.username }}</span> 
@@ -177,12 +177,12 @@
             <!-- 수정 모드일 때 -->
             <div v-else class="space-y-3">
               <textarea
-                v-model="comment.editContent"
+                v-model="editingComments.get(comment.id).editContent"
                 rows="3"
                 class="w-full p-2 border rounded-lg"
               ></textarea>
               <div class="flex justify-end gap-2">
-                <button @click="cancelEdit(comment)" 
+                <button @click="editingComments.delete(comment.id)"
                         class="text-sm text-gray-600 hover:text-gray-900">
                   취소
                 </button>
@@ -203,24 +203,24 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
+import { ref, onUnmounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useBoardStore } from '@/stores/board'
 import { useUserStore } from '@/stores/user'
-import CommentList from './CommentList.vue'
 
 const route = useRoute()
 const router = useRouter()
 const boardStore = useBoardStore()
 const userStore = useUserStore()
 
-const { board } = storeToRefs(boardStore)
+const { board, comments } = storeToRefs(boardStore)
 const { user } = storeToRefs(userStore) 
 
 const boardId = computed(() => parseInt(route.params.id))
 const commentContent = ref('')
 const hasLiked = ref(false)
+const editingComments = ref(new Map())
 
 const isAuthor = computed(() => {
   return board.value?.userId === user.value?.id
@@ -301,22 +301,28 @@ const addComment = async () => {
 }
 
 const startEdit = (comment) => {
-  comment.isEditing = true
-  comment.editContent = comment.content
+  editingComments.value.set(comment.id, {
+    isEditing: true,
+    editContent: comment.content
+  })
 }
 
-const cancelEdit = (comment) => {
-  comment.isEditing = false
-  comment.editContent = ''
+const isEditing = (commentId) => {
+  return editingComments.value.has(commentId)
 }
 
 const updateComment = async (comment) => {
   try {
+    const editingComment = editingComments.value.get(comment.id)
+    if (!editingComment) return
+
     await boardStore.updateComment({
       id: comment.id,
-      content: comment.editContent
+      boardId: parseInt(route.params.id),
+      content: editingComment.editContent
     })
-    comment.isEditing = false
+
+    editingComments.value.delete(comment.id)
     await loadComments()
   } catch (error) {
     console.error('Error updating comment:', error)
