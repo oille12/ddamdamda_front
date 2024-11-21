@@ -208,5 +208,22 @@ export const useUserStore = defineStore('user', {
       throw error
     }
   },
+
+  // 회원가입 
+  async signup(userData) {
+    try {
+      const userDto = {
+        email: userData.email,
+        password: userData.password,
+        username: userData.username
+      }
+  
+      const response = await api.post('/register', userDto)
+      return response.data
+    } catch (error) {
+      console.error('회원가입 에러:', error)
+      throw error
+    }
+  }
  }
 })
