@@ -27,7 +27,7 @@
     
     <div class="flex items-center mb-2">
       <span 
-        class="text-xs px-3 py-1.5 rounded-full"
+        class="text-xs px-3 py-1.5 rounded-full font-black"
         :class="group.mateStatus === '마감' ? 'bg-gray-200 text-gray-600' : 'bg-[#dcff1f] text-black'"
       >
         {{ group.mateStatus }}
@@ -136,6 +136,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useGroupStore } from '@/stores/group'
+import { useUserStore } from '@/stores/user'
 
 const props = defineProps({
   group: {
@@ -145,25 +146,63 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['join'])
-
+const userStore = useUserStore()
 const groupStore = useGroupStore()
 const imageUrl = ref(null)
 const showModal = ref(false)
+const isMember = ref(false)
+
+// 현재 유저가 관리자인지 확인
+const isAdmin = computed(() => {
+  return userStore.user && userStore.user.id === props.group.adminId
+})
 
 const buttonText = computed(() => {
-  return props.group.mateStatus === '마감' ? '모집 마감' : '참가하기'
+  if (isMember.value || isAdmin.value) return '이미 참여한 그룹 메이트입니다'
+  if (props.group.mateStatus === '마감') return '모집 마감'
+  return '참가하기'
 })
 
 const buttonClass = computed(() => {
-  if (props.group.mateStatus === '마감') {
+  if (isAdmin.value || isMember.value || props.group.mateStatus === '마감') {
     return 'bg-gray-100 text-gray-500 cursor-not-allowed'
   }
   return 'bg-black text-white hover:bg-gray-800'
 })
 
-const handleJoin = () => {
-  if (props.group.mateStatus !== '마감') {
-    emit('join', props.group.groupId)
+const canJoin = computed(() => {
+  return (!isMember.value) && (props.group.mateStatus !== '마감') && (!isAdmin.value)
+})
+
+const handleJoin = async () => {
+  if (!canJoin.value) return
+  
+  try {
+    if (!userStore.isAuthenticated) {
+      alert('로그인이 필요합니다.')
+      return
+    }
+
+    const confirmed = window.confirm(`'${props.group.groupName}' 그룹에 참가하시겠습니까?`)
+    if (!confirmed) return  // 취소를 누르면 여기서 종료
+
+    await groupStore.joinGroup(props.group.groupId, userStore.user.id)
+    // 성공 메시지
+    alert('그룹 참가가 완료되었습니다.')
+
+    window.location.reload()
+  } catch (error) {
+    console.error('그룹 참가 실패:', error)
+    alert('그룹 참가에 실패했습니다.')
+  }
+}
+
+const checkMembership = async () => {
+  if (userStore.isAuthenticated) {
+    isMember.value = await groupStore.checkMembershipStatus(
+      props.group.groupId, 
+      userStore.user.id
+    )
   }
 }
 
@@ -171,6 +210,7 @@ onMounted(async () => {
   if (props.group.groupImg) {
     imageUrl.value = await groupStore.getGroupImage(props.group.groupImg)
   }
+  await checkMembership()
 })
 </script>
 
