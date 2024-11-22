@@ -13,19 +13,30 @@
     <!-- Main Content -->
     <main class="pt-6 pb-20">
       <div class="max-w-7xl mx-auto px-6">
+        
+        
         <!-- Search and Filter -->
         <div class="mb-6 flex flex-wrap gap-4 items-center justify-between">
           <!-- Search -->
           <div class="flex gap-2">
+            <select 
+              v-model="selectedStatus"
+              class="rounded-lg border p-2"
+              @change="handleFilter"
+            >
+              <option value="">전체 상태</option>
+              <option value="모집중">모집중</option>
+              <option value="마감">마감</option>
+            </select>
             <input 
               v-model="searchKeyword"
               type="text"
               placeholder="그룹 검색..."
-              class="border rounded px-3 py-2"
+              class="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
             >
             <button 
               @click="handleSearch"
-              class="bg-black text-white px-4 py-2 rounded hover:bg-gray-800"
+              class="bg-black text-white px-4 py-2 rounded-full hover:bg-gray-800"
             >
               검색
             </button>
@@ -33,20 +44,10 @@
 
           <!-- Filter -->
           <div class="flex gap-2">
-            <select 
-              v-model="selectedStatus"
-              class="border rounded px-3 py-2"
-              @change="handleFilter"
-            >
-              <option value="">전체 상태</option>
-              <option value="모집중">모집중</option>
-              <option value="마감">마감</option>
-            </select>
-
             <!-- Create Group Link -->
             <router-link 
               to="/group/write" 
-              class="bg-black text-white px-4 py-2 rounded hover:bg-gray-800"
+              class="bg-black text-white px-4 py-2 rounded-full hover:bg-gray-800"
             >
               그룹 메이트 만들기
             </router-link>
