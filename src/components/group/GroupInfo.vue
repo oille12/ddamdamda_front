@@ -64,12 +64,13 @@
   </div>
 
   <!-- Modal -->
-  <div v-if="showModal" 
-    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+  <div 
+    v-if="showModal" 
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-20px z-50"
     @click="showModal = false"
   >
     <div 
-      class="bg-white rounded-2xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto"
+      class="bg-white rounded-2xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto custom-scrollbar"
       @click.stop
     >
       <div class="relative aspect-[16/9] rounded-2xl overflow-hidden mb-4">
@@ -123,7 +124,7 @@
 
       <div class="flex justify-end">
         <button 
-          class="px-4 py-2 text-gray-600 hover:text-gray-900"
+          class="px-4 py-2 bg-black border rounded-full text-white hover:text-gray-900"
           @click="showModal = false"
         >
           닫기
@@ -229,4 +230,34 @@ onMounted(async () => {
   background-color: rgba(0, 0, 0, 0.2);
   border-radius: 3px;
 }
+
+/* 스크롤바 완전히 숨기기 */
+.hide-scrollbar {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+/* 또는 미니멀한 스크롤바를 원한다면 */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 20px;
+}
+
 </style>
