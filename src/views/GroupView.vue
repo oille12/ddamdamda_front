@@ -1,4 +1,3 @@
-// views/group/GroupView.vue
 <template>
   <div class="min-h-screen">
     <!-- Banner Section -->
@@ -44,9 +43,8 @@
               <option value="마감">마감</option>
             </select>
 
-            <!-- Create Group Link (Changed from button to router-link) -->
+            <!-- Create Group Link -->
             <router-link 
-              v-if="userStore.isAuthenticated"
               to="/group/write" 
               class="bg-black text-white px-4 py-2 rounded hover:bg-gray-800"
             >
@@ -55,8 +53,32 @@
           </div>
         </div>
 
+        <!-- Empty State -->
+        <div v-if="groups.length === 0" class="text-center py-20">
+          <div class="mb-4">
+            <svg class="w-16 h-16 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+          </div>
+          <h2 class="text-xl font-semibold text-gray-900 mb-2">
+            그룹 메이트 모집글이 없어요
+          </h2>
+          <p class="text-gray-600 mb-4">
+            가장 먼저 운동 그룹을 만들어 보시는건 어떨까요?
+          </p>
+          <router-link 
+            to="/group/write"
+            class="inline-flex items-center px-4 py-2 bg-black text-white rounded hover:bg-gray-800"
+          >
+            새 그룹 만들기
+          </router-link>
+        </div>
+
         <!-- Groups Grid -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div 
+          v-else 
+          class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+        >
           <GroupInfo 
             v-for="group in groups" 
             :key="group.groupId" 

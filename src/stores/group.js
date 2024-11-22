@@ -18,18 +18,49 @@ export const useGroupStore = defineStore('group', {
           pageSize: pageRequest?.pageSize || 9,
           search: pageRequest?.search || null,
           mateStatus: pageRequest?.mateStatus || null,
-          orderBy: pageRequest?.orderBy || 'created_at',
-          orderDir: pageRequest?.orderDir || 'DESC'
         }
         
         const response = await api.post('/groupinfo/page', requestData)
         this.groups = response.data.list
         this.totalPages = response.data.pages
         this.currentPage = requestData.pageNum
+
         return response.data
       } catch (error) {
         console.error('그룹 목록 로드 에러:', error)
         throw error
+      }
+    },
+
+    async uploadGroupImage(file) {
+      try {
+        const formData = new FormData()
+        formData.append('file', file)
+
+        const response = await api.post('/images/upload', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        })
+
+        return response.data  // imageId 반환
+      } catch(error) {
+        console.error('이미지 업로드 실패:', error)
+        throw error
+      }
+    },
+
+    async getGroupImage(imageId) {
+      if (!imageId) return null
+      
+      try {
+        const response = await api.get(`/images/${imageId}`, {
+          responseType: 'blob'
+        })
+        return URL.createObjectURL(response.data)
+      } catch (error) {
+        console.error('이미지 조회 실패:', error)
+        return null
       }
     },
 
@@ -44,6 +75,7 @@ export const useGroupStore = defineStore('group', {
       }
     },
 
+    // stores/group.js의 createGroup 메서드
     async createGroup(groupData, imageFile) {
       try {
         const formData = new FormData()
@@ -56,18 +88,31 @@ export const useGroupStore = defineStore('group', {
           region: groupData.region,
           exerciseType: groupData.exerciseType,
           memberCount: groupData.memberCount,
-          currentMembers: 1, // 생성 시 관리자 1명
+          currentMembers: 1,
           mateStatus: '모집중'
         }
 
+        // 순서 중요: groupInfo를 먼저 추가하고 imageFile을 추가
         formData.append('groupInfo', new Blob([JSON.stringify(groupInfo)], {
           type: 'application/json'
         }))
-        
-        // 이미지 파일 추가
-        formData.append('imageFile', imageFile)
 
-        const response = await api.post('/groupinfo', formData)
+        // 이미지 파일 추가
+        if (imageFile) {
+          formData.append('imageFile', imageFile, imageFile.name)  // 파일 이름도 함께 전송
+        }
+
+        // FormData 내용 확인 (디버깅용)
+        for (let pair of formData.entries()) {
+          console.log(pair[0], pair[1]) 
+        }
+
+        const response = await api.post('/groupinfo', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            // 다른 헤더는 axios interceptor에서 처리
+          }
+        })
         return response.data
       } catch (error) {
         console.error('그룹 생성 에러:', error)

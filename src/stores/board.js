@@ -121,36 +121,36 @@ export const useBoardStore = defineStore('board', {
     return response.data
   },
   
-  async createBoard(boardData) {
+  async createGroup(groupData, imageFile) {
     try {
-      // 1. JWT 토큰에서 userId 추출
-      const token = localStorage.getItem('token')
-      const userId = JSON.parse(atob(token.split('.')[1])).id
-  
-      // 2. FormData 생성
       const formData = new FormData()
       
-      // 3. 게시글 데이터를 JSON으로 변환하여 추가
-      const boardInfo = {
-        userId: userId,
-        category: boardData.category,
-        title: boardData.title,
-        content: boardData.content
+      // GroupInfo 데이터 추가
+      const groupInfo = {
+        groupName: groupData.groupName,
+        description: groupData.description,
+        adminId: groupData.adminId,
+        region: groupData.region,
+        exerciseType: groupData.exerciseType,
+        memberCount: groupData.memberCount,
+        currentMembers: 1, // 생성 시 관리자 1명
+        mateStatus: '모집중'
       }
-      formData.append('board',  new Blob([JSON.stringify(boardInfo)], {
-        type: 'application/json'}))
-      
-      // 이미지 추가
-      if (boardData.images && boardData.images.length > 0) {
-        boardData.images.forEach(file => {
-          formData.append('images', file)
-        })
-      }
-      const response = await api.post('/board', formData)
+  
+      // 이미지 파일과 groupInfo를 함께 전송
+      formData.append('groupInfo', new Blob([JSON.stringify(groupInfo)], {
+        type: 'application/json'
+      }))
+      formData.append('imageFile', imageFile)
+  
+      const response = await api.post('/groupinfo', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      })
       return response.data
-      
-    } catch(error) {
-      console.error('게시글 생성 에러:', error)
+    } catch (error) {
+      console.error('그룹 생성 에러:', error)
       throw error
     }
   },
