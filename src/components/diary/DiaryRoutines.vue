@@ -1,11 +1,11 @@
 <script setup>
 import { computed, ref } from 'vue'
-// import SetCountModal from './modals/SetCountModal.vue';
+import { routine } from '@/stores/routine';
 
 const props = defineProps({
   selectedDate: {
-    type: Object,
-    default: () => null
+    type: [Number, Object],
+    default: null
   },
   currentDate: {
     type: Date,
@@ -23,7 +23,8 @@ const emit = defineEmits([
   'edit-routine', 
   'show-set-count-modal',
   'delete-routine', 
-  'show-video'
+  'show-video',
+  'update-routine-status'
 ])
 
 // 날짜 관련 computed 속성들
@@ -44,16 +45,16 @@ const formattedDate = computed(() => {
 
 // 선택된 날짜의 루틴만 필터링
 const filteredRoutines = computed(() => {
-  if (!props.selectedDate) return props.routines
+  if (!props.selectedDate) return []
+
+  const year = props.currentDate.getFullYear()
+  const month = String(props.currentDate.getMonth() + 1).padStart(2, '0')
+  const day = String(props.selectedDate).padStart(2, '0')
+  const selectedDateStr = `${year}-${month}-${day}`
   
-  const selected = new Date(props.currentDate.getFullYear(), 
-                          props.currentDate.getMonth(), 
-                          props.selectedDate)
-  
-  return props.routines.filter(routine => {
-    const routineDate = new Date(routine.date)
-    return routineDate.toDateString() === selected.toDateString()
-  })
+  return props.routines.filter(routine => 
+    routine.exerciseDate === selectedDateStr
+  )
 })
 
 const showSetCountModal = ref(false)
@@ -77,6 +78,41 @@ const handleSetCountConfirm = (setCount) => {
   editingRoutine.value = null
 }
 
+const completeRoutine = async(routine) => {
+  if(routine.is_completed === 1) {
+    return
+  }
+
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  const routineDate = new Date(routine.exerciseDate)
+  routineDate.setHours(0, 0, 0, 0)
+
+  if(routineDate > today) {
+    alert('미래 날짜의 루틴은 완료 처리할 수 없습니다.')
+    return
+  }
+
+  const confirmed = confirm('완료 처리하시겠습니까?')
+  if(!confirmed) {
+    return
+  }
+
+  try {
+    emit('update-routine-status', {
+      routineId : routine.id,
+      completed: true
+    })
+
+    // routine.disabled = true // 
+    // routine.completed = true //
+  } catch(error) {
+    console.error('루틴 완료처리 중 오류 발생:', error)
+    // routine.completed = false // 
+    alert('완료 처리 중 오류 발생했습니다.')
+  }
+}
 </script>
 
 <template>
@@ -88,7 +124,7 @@ const handleSetCountConfirm = (setCount) => {
       </div>
 
       <!-- 버튼 그룹 -->
-      <div class="flex items-center gap-4">
+      <div class="flex items-center gap-3">
         <!-- 루틴 등록 버튼 -->
         <button 
           @click="emit('show-routine-modal')" 
@@ -127,9 +163,18 @@ const handleSetCountConfirm = (setCount) => {
         class="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
       >
         <div class="flex items-center justify-between">
-          <div class="flex items-center space-x-3">
+          <div class="flex items-center space-x-3"
+            :class="{ 'completed-routine': routine.is_completed === 1 }"
+          >
+            <input 
+              type="checkbox" 
+              class="w-5 h-5 rounded text-black focus:ring-black"
+              :checked="routine.is_completed === 1"
+              :disabled="routine.is_completed === 1"
+              @change="completeRoutine(routine)"
+            >
             <div>
-              <div class="font-medium">{{ routine.name }}</div>
+              <div class="font-medium">{{ routine.title }}</div>
               <div class="text-sm text-gray-500">{{ routine.sets }}세트 × {{ routine.reps }}회</div>
             </div>
           </div>
@@ -180,17 +225,6 @@ const handleSetCountConfirm = (setCount) => {
           </div>
         </div>
       </div>
-        
-      <!-- 세트/횟수 설정 모달 -->
-      <!-- <SetCountModal
-        v-if="showSetCountModal"
-        :exercise-name="editingRoutine?.name"
-        :initial-sets="editingRoutine?.sets"
-        :initial-reps="editingRoutine?.reps"
-        :is-edit="true"
-        @close="showSetCountModal = false"
-        @confirm="handleSetCountConfirm"
-      /> -->
     </div>
   </div>
 
@@ -226,5 +260,14 @@ const handleSetCountConfirm = (setCount) => {
   100% {
     box-shadow: 0 0 0 0 rgba(220, 255, 31, 0);
   }
+}
+.completed-routine {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.completed-routine input[type="checkbox"] {
+  cursor: not-allowed;
+  background-color: #e5e5e5;
 }
 </style>

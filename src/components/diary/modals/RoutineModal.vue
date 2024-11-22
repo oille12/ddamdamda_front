@@ -1,51 +1,3 @@
-<!-- <script setup>
-import { ref, computed } from 'vue'
-
-const props = defineProps({
-  categories: {
-    type: Array,
-    default: () => []
-  },
-  filteredExercises: {
-    type: Array,
-    default: () => []
-  },
-  selectedCategory: {
-    type: Number,
-    default: null
-  },
-  currentDate: {
-    type: Date,
-    required: true
-  }
-})
-
-const emit = defineEmits(['close', 'select-category', 'add-routine'])
-
-const newRoutine = ref({
-  name: '',
-  sets: '',
-  reps: '',
-  date: props.currentDate.toISOString(),
-  completed: false
-})
-
-const isValid = computed(() => {
-  return newRoutine.value.name.trim() !== '' && 
-         newRoutine.value.sets > 0 && 
-         newRoutine.value.reps > 0
-})
-
-const handleSubmit = () => {
-  if (isValid.value) {
-    emit('add-routine', {
-      id: Date.now(),
-      ...newRoutine.value
-    })
-    emit('close')
-  }
-}
-</script> -->
 <script setup>
 import { ref, computed } from 'vue'
 import SetCountModal from './SetCountModal.vue'
@@ -67,17 +19,17 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'add-routines'])
 
-const selectedCategory = ref(null)
+const selectedCategory = ref(props.categories[0]?.id || 1)
 const selectedExercises = ref(new Map())
 const showSetCountModal = ref(false)
 const currentExercise = ref(null)
 
 // 선택된 카테고리의 운동 목록 (이미 선택된 운동은 제외)
 const availableExercises = computed(() => {
-  if (!selectedCategory.value) return []
+  if (!selectedCategory.value || !props.exercises) return []
   return props.exercises.filter(ex => 
-    ex.categoryId === selectedCategory.value && 
-    !selectedExercises.value.has(ex.id)
+    ex?.categoryId === selectedCategory.value && 
+    !selectedExercises.value.has(ex?.id)
   )
 })
 
@@ -105,67 +57,24 @@ const handleSetCountConfirm = (setCount) => {
 
 // 루틴 등록 핸들러
 const handleSubmit = () => {
+  const year = props.selectedDate.getFullYear()
+  const month = String(props.selectedDate.getMonth() + 1).padStart(2, '0')
+  const day = String(props.selectedDate.getDate()).padStart(2, '0')
+  const dateStr = `${year}-${month}-${day}`
+
   const routines = Array.from(selectedExercises.value.values()).map(exercise => ({
-    id: Date.now() + Math.random(),
-    name: exercise.name,
+    id: exercise.id,
+    title: exercise.title,
     sets: exercise.sets,
     reps: exercise.reps,
-    date: props.selectedDate.toISOString(),
-    categoryId: exercise.categoryId
+    exerciseDate: dateStr,
+    completed: false
   }))
   
   emit('add-routines', routines)
   emit('close')
 }
 
-// // 선택된 카테고리의 운동 목록
-// const filteredExercises = computed(() => {
-//   if (!selectedCategory.value) return []
-//   return props.exercises.filter(ex => ex.categoryId === selectedCategory.value)
-// })
-
-// // 운동이 선택되었는지 확인
-// const isExerciseSelected = (exerciseId) => {
-//   return selectedExercises.value.has(exerciseId)
-// }
-
-// // 운동 추가/제거 클릭 핸들러
-// const handleExerciseClick = (exercise) => {
-//   if (isExerciseSelected(exercise.id)) {
-//     // 이미 선택된 운동이면 제거
-//     selectedExercises.value.delete(exercise.id)
-//   } else {
-//     // 새로운 운동이면 세트/횟수 모달 표시
-//     currentExercise.value = exercise
-//     showSetCountModal.value = true
-//   }
-// }
-
-// // 세트/횟수 설정 완료 핸들러
-// const handleSetCountConfirm = (setCount) => {
-//   selectedExercises.value.set(currentExercise.value.id, {
-//     ...currentExercise.value,
-//     sets: setCount.sets,
-//     reps: setCount.reps
-//   })
-//   showSetCountModal.value = false
-//   currentExercise.value = null
-// }
-
-// // 루틴 등록 핸들러
-// const handleSubmit = () => {
-//   const routines = Array.from(selectedExercises.value.values()).map(exercise => ({
-//     id: Date.now() + Math.random(),
-//     name: exercise.name,
-//     sets: exercise.sets,
-//     reps: exercise.reps,
-//     date: props.selectedDate.toISOString(),
-//     categoryId: exercise.categoryId
-//   }))
-  
-//   emit('add-routines', routines)
-//   emit('close')
-// }
 </script>
 
 <template>
@@ -189,7 +98,7 @@ const handleSubmit = () => {
                   selectedCategory === category.id ? 'bg-black text-[#dcff1f]' : 'bg-gray-100']"
           @click="selectedCategory = category.id"
         >
-          {{ category.name }}
+          {{ category.title }}
         </button>
       </div>
 
@@ -203,7 +112,7 @@ const handleSubmit = () => {
             class="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
           >
             <div>
-              <div class="font-medium">{{ exercise.name }}</div>
+              <div class="font-medium">{{ exercise.title }}</div>
               <div class="text-sm text-gray-500">{{ exercise.sets }}세트 × {{ exercise.reps }}회</div>
             </div>
             <button 
@@ -228,7 +137,7 @@ const handleSubmit = () => {
             :key="exercise.id" 
             class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
           >
-            <span class="font-medium">{{ exercise.name }}</span>
+            <span class="font-medium">{{ exercise.title }}</span>
             <button 
               @click="handleAddExercise(exercise)"
               class="p-1.5 rounded-full transition-colors text-lime-500 hover:bg-lime-50"
@@ -275,7 +184,7 @@ const handleSubmit = () => {
   <!-- 세트/횟수 설정 모달 -->
   <SetCountModal
     v-if="showSetCountModal"
-    :exercise-name="currentExercise?.name"
+    :exercise-title="currentExercise?.title"
     @close="showSetCountModal = false"
     @confirm="handleSetCountConfirm"
   />

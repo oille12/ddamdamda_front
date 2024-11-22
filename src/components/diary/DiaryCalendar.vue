@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 
 const props = defineProps({
   currentYear: {
@@ -22,6 +22,17 @@ const props = defineProps({
 
 const emit = defineEmits(['previous-month', 'next-month', 'select-date'])
 
+const formatDate = (date) => {
+  const year = props.currentYear
+  const month = String(props.currentMonth).padStart(2, '0')
+  const day = String(date).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+const getDate = (date) => {
+  return typeof date === 'number' ? date : date.getDate()
+}
+
 // 요일 배열
 const weekDays = ['일', '월', '화', '수', '목', '금', '토']
 
@@ -41,7 +52,7 @@ const calendarDays = computed(() => {
       isCurrentMonth: false,
       isToday: false,
       isSelected: false,
-      hasRoutine: hasRoutineOnDate(prevDate)
+      hasRoutine: hasRoutineOnDate(prevDate.getDate())
     })
   }
   
@@ -55,32 +66,38 @@ const calendarDays = computed(() => {
                props.currentMonth === today.getMonth() + 1 &&
                props.currentYear === today.getFullYear(),
       isSelected: i === props.selectedDate,
-      hasRoutine: hasRoutineOnDate(new Date(props.currentYear, props.currentMonth - 1, i))
+      hasRoutine: hasRoutineOnDate(i)
     })
   }
-  
   return days
 })
 
 // 특정 날짜에 루틴이 있는지 확인
 const hasRoutineOnDate = (date) => {
-  return props.routines.some(routine => {
-    const routineDate = new Date(routine.date)
-    return routineDate.getDate() === date.getDate() &&
-           routineDate.getMonth() === date.getMonth() &&
-           routineDate.getFullYear() === date.getFullYear()
-  })
+  if (!props.routines || !Array.isArray(props.routines)) return false
+  
+  const year = props.currentYear
+  const month = String(props.currentMonth).padStart(2, '0')
+  const day = String(typeof date === 'number' ? date : date.getDate()).padStart(2, '0')
+  const dateStr = `${year}-${month}-${day}`
+
+  return props.routines.some(routine => routine.exerciseDate === dateStr)
 }
 
 // 날짜별 클래스 계산
 const getDayClasses = (day) => {
   return {
     'text-gray-400': !day.isCurrentMonth,
-    'bg-[#dcff1f]': day.isToday,
-    'bg-black text-white': day.isSelected && !day.isToday,
-    'after:absolute after:top-9 after:left-1/2 after:-translate-x-1/2 after:w-1.5 after:h-1.5 after:bg-red-400 after:rounded-full': day.hasRoutine
+    'bg-[#dcff1f] rounded-full': day.isToday,
+    'bg-black text-white rounded-full': day.isSelected && !day.isToday,
+    'relative hover:rounded-full': true,
+    'after:absolute after:content-[""] after:top-9 after:left-1/2 after:-translate-x-1/2 after:w-1.5 after:h-1.5 after:bg-red-400 after:rounded-full': day.hasRoutine
   }
 }
+
+watch (() => props.routines, () => {
+  console.log('루틴 수정:', props.routines)
+}, {deep:true})
 </script>
 
 <template>
@@ -103,7 +120,7 @@ const getDayClasses = (day) => {
     </div>
 
     <!-- 달력 내부 -->
-    <div class="grid grid-cols-7 gap-1">
+    <div class="grid grid-cols-7 gap-">
       <!-- 요일 헤더 -->
       <template v-for="(day, index) in weekDays" :key="index">
         <div 
@@ -115,15 +132,17 @@ const getDayClasses = (day) => {
       </template>
 
       <!-- 날짜 표시 -->
-      <template v-for="(day, index) in calendarDays" :key="index">
-        <div 
-          class="aspect-square p-2 text-center cursor-pointer relative rounded-full transition-all hover:bg-gray-50"
-          :class="getDayClasses(day)"
-          @click="emit('select-date', day.date)"
-        >
-          {{ day.date }}
-        </div>
-      </template>
+      <button
+        v-for="day in calendarDays"
+        :key="day.date"
+        :class="[
+          'h-12 w-12 text-sm leading-none flex flex-col items-center justify-center relative rounded-full',
+          getDayClasses(day)
+        ]"
+        @click="day.isCurrentMonth && emit('select-date', day.date)"
+      >
+        <time :datetime="formatDate(day.date)">{{ getDate(day.date) }}</time>
+      </button>
     </div>
   </div>
 </template>
