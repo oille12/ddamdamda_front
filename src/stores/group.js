@@ -1,4 +1,3 @@
-// stores/group.js
 import { defineStore } from 'pinia'
 import api from '@/api'
 
@@ -8,7 +7,9 @@ export const useGroupStore = defineStore('group', {
     totalPages: 0,
     currentPage: 1,
     selectedGroup: null,
-    groupMembers: new Map()
+    groupMembers: new Map(),
+    myGroups: [],
+    loading: false
   }),
 
   actions: {
@@ -33,21 +34,37 @@ export const useGroupStore = defineStore('group', {
       }
     },
 
-    async uploadGroupImage(file) {
+    // stores/group.js의 fetchMyGroups 수정
+    async fetchMyGroups(userId) {
+      this.loading = true
       try {
-        const formData = new FormData()
-        formData.append('file', file)
-
-        const response = await api.post('/images/upload', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          }
-        })
-
-        return response.data  // imageId 반환
-      } catch(error) {
-        console.error('이미지 업로드 실패:', error)
+        const response = await api.get(`/groupinfo/user/${userId}`)
+        this.myGroups = response.data
+        return response.data
+      } catch (error) {
+        console.error('내 그룹 목록 로드 실패:', error)
         throw error
+      } finally {
+        this.loading = false
+      }
+    },
+
+    // stores/group.js
+    async getLatestNotice(groupId) {
+      try {
+        console.log('공지사항 요청 ID:', groupId) // 요청 ID 확인
+        
+        const response = await api.get(`/groupnotice/latest/${groupId}`)
+        console.log('공지사항 응답:', response.data) // 응답 데이터 확인
+        
+        return response.data
+      } catch (error) {
+        if (error.response?.status === 400) {
+          console.log('공지사항 없음 (그룹 ID:', groupId, ')') // 400 에러 확인
+          return null
+        }
+        console.error(`최신 공지 로드 실패 (그룹 ${groupId}):`, error)
+        return null
       }
     },
 
@@ -76,12 +93,10 @@ export const useGroupStore = defineStore('group', {
       }
     },
 
-    // stores/group.js의 createGroup 메서드
     async createGroup(groupData, imageFile) {
       try {
         const formData = new FormData()
         
-        // GroupInfo 데이터 추가
         const groupInfo = {
           groupName: groupData.groupName,
           description: groupData.description,
@@ -93,25 +108,17 @@ export const useGroupStore = defineStore('group', {
           mateStatus: '모집중'
         }
 
-        // 순서 중요: groupInfo를 먼저 추가하고 imageFile을 추가
         formData.append('groupInfo', new Blob([JSON.stringify(groupInfo)], {
           type: 'application/json'
         }))
 
-        // 이미지 파일 추가
         if (imageFile) {
-          formData.append('imageFile', imageFile, imageFile.name)  // 파일 이름도 함께 전송
-        }
-
-        // FormData 내용 확인 (디버깅용)
-        for (let pair of formData.entries()) {
-          console.log(pair[0], pair[1]) 
+          formData.append('imageFile', imageFile)
         }
 
         const response = await api.post('/groupinfo', formData, {
           headers: {
-            'Content-Type': 'multipart/form-data',
-            // 다른 헤더는 axios interceptor에서 처리
+            'Content-Type': 'multipart/form-data'
           }
         })
         return response.data
@@ -151,16 +158,6 @@ export const useGroupStore = defineStore('group', {
       }
     },
 
-    async getUserGroups(userId) {
-      try {
-        const response = await api.get(`/groupinfo/user/${userId}`)
-        return response.data
-      } catch (error) {
-        console.error('사용자 그룹 조회 에러:', error)
-        throw error
-      }
-    },
-
     async getGroupMembers(groupId) {
       try {
         const response = await api.get(`/groupmembers/${groupId}`)
@@ -188,11 +185,11 @@ export const useGroupStore = defineStore('group', {
     async joinGroup(groupId, userId) {
       try {
         const response = await api.post('/groupmembers', {
-          groupId: groupId,
-          userId: userId
+          groupId,
+          userId
         })
-        // 멤버 리스트 갱신
         await this.getGroupMembers(groupId)
+        await this.refreshGroupInfo(groupId)
         return response.data
       } catch (error) {
         console.error('그룹 참가 실패:', error)
@@ -203,25 +200,21 @@ export const useGroupStore = defineStore('group', {
     async leaveGroup(groupId, userId) {
       try {
         const response = await api.delete('/groupmembers', {
-          data: {
-            groupId: groupId,
-            userId: userId
-          }
+          data: { groupId, userId }
         })
-        // 멤버 리스트 갱신
         await this.getGroupMembers(groupId)
+        await this.refreshGroupInfo(groupId)
         return response.data
       } catch (error) {
         console.error('그룹 탈퇴 실패:', error)
         throw error
       }
     },
-        // stores/group.js에 메서드 추가
+
     async refreshGroupInfo(groupId) {
       try {
         const response = await api.get(`/groupinfo/${groupId}`)
-        // 그룹 목록에서 해당 그룹 정보 업데이트
-        const index = this.groups.findIndex(g => g.groupId === groupId)
+        const index = this.groups.findIndex(g => g.id === groupId)
         if (index !== -1) {
           this.groups[index] = response.data
         }
@@ -230,6 +223,24 @@ export const useGroupStore = defineStore('group', {
         console.error('그룹 정보 갱신 실패:', error)
         throw error
       }
+    },
+
+    async fetchGroupNotices(pageRequest) {
+      try {
+        const response = await api.post('/groupnotice/page', {
+          ...pageRequest,
+          pageSize: pageRequest.pageSize || 5
+        })
+        return response.data
+      } catch (error) {
+        console.error('공지사항 목록 로드 실패:', error)
+        throw error
+      }
+    },
+
+    clearMyGroups() {
+      this.myGroups = []
+      this.loading = false
     }
   }
 })

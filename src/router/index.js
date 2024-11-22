@@ -10,6 +10,8 @@ import GroupView from '@/views/GroupView.vue'
 import GroupInfoWrite from '@/components/group/GroupInfoWrite.vue'
 import SignupView from '@/views/SignupView.vue'
 import DiaryView from '@/views/DiaryView.vue'
+import MyGroupView from '@/views/MyGroupView.vue'
+import MyGroupDetail from '@/components/group/my/MyGroupDetail.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -73,6 +75,16 @@ const router = createRouter({
       path: '/diary',
       name: 'diary',
       component: DiaryView
+    },
+    {
+      path: '/mygroups',
+      name: 'mygroups',
+      component: MyGroupView
+    },
+    {
+      path: '/mygroups-detail/:groupId',
+      name: 'MyGroupDetail',
+      component: MyGroupDetail
     }
   ]
 })
