@@ -39,7 +39,8 @@
             <DiaryCalendar 
               :current-year="currentYear"
               :current-month="currentMonth"
-              :calendar-days="calendarDays"
+              :selected-date="selectedDate"
+              :routines="userRoutines"
               @previous-month="previousMonth"
               @next-month="nextMonth"
               @select-date="selectDate"
@@ -47,13 +48,16 @@
   
             <div class="space-y-6">
               <!-- 루틴 컴포넌트 -->
-              <DiaryRoutines 
-                :routines="routines"
+              <DiaryRoutines
                 :selected-date="selectedDate"
-                :today-date="currentDate.getDate()"
+                :current-date="currentDate"
+                :routines="userRoutines"
                 @show-routine-modal="showRoutineModal = true"
                 @show-ai-modal="showAiModal = true"
+                @update-routine="updateRoutine"
+                @delete-routine="deleteRoutine"
                 @show-video="showVideoModal = true"
+                @show-set-count-modal="handleShowSetCountModal"
               />
   
               <!-- 차트 그리드 -->
@@ -71,15 +75,25 @@
         </div>
       </div>
   
-      <!-- Modals -->
-      <RoutineModal
+      <RoutineModal 
         v-if="showRoutineModal"
-        @close="closeRoutineModal"
         :categories="categories"
-        :filtered-exercises="filteredExercises"
-        :selected-category="selectedCategory"
+        :exercises="exercises"
+        :selected-date="new Date(currentYear, currentMonth - 1, selectedDate)"
+        @close="showRoutineModal = false"
+        @add-routines="handleAddRoutines"
       />
-      
+
+      <SetCountModal
+        v-if="showSetCountModal"
+        :exercise-name="editingRoutine?.name"
+        :initial-sets="editingRoutine?.sets"
+        :initial-reps="editingRoutine?.reps"
+        :is-edit="true"
+        @close="showSetCountModal = false"
+        @confirm="handleSetCountConfirm"
+      />
+
       <AiRoutineModal
         v-if="showAiModal"
         @close="closeAiModal"
@@ -101,6 +115,8 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
+
+import { useUserStore } from '@/stores/user'
 import DiaryCalendar from '@/components/diary/DiaryCalendar.vue'
 import DiaryRoutines from '@/components/diary/DiaryRoutines.vue'
 import WeeklyProgress from '@/components/diary/charts/WeeklyProgress.vue'
@@ -109,22 +125,116 @@ import MonthlyStats from '@/components/diary/charts/MonthlyStats.vue'
 import RoutineModal from '@/components/diary/modals/RoutineModal.vue'
 import AiRoutineModal from '@/components/diary/modals/AiRoutineModal.vue'
 import VideoModal from '@/components/diary/modals/VideoModal.vue'
+import SetCountModal from '@/components/diary/modals/SetCountModal.vue'
 
 const route = useRoute()
 const router = useRouter()
-
-// 기본 상태
-const currentDate = new Date()
-const currentYear = ref(currentDate.getFullYear())
-const currentMonth = ref(currentDate.getMonth() + 1)
-const selectedDate = ref(null)
+const userStore = useUserStore()
 const routines = ref([])
+
+const userRoutines = computed(() => {
+  return routines.value.filter(routine => routine.userId === currentUser.value.id)
+})
+
+const categories = ref([
+  { id: 1, name: '가슴' },
+  { id: 2, name: '등' },
+  // ...
+])
+
+const exercises = ref([
+  { id: 1, name: '벤치프레스', categoryId: 1 },
+  { id: 2, name: '푸시업', categoryId: 1 },
+  // ...
+])
+
+const handleAddRoutines = async (newRoutines) => {
+  try {
+    const addedRoutines = await routineApi.addRoutines(newRoutines)
+    routines.value.push(...addedRoutines)
+    showRoutineModal.value = false
+  } catch (error) {
+    console.error('루틴 추가 실패:', error)
+  }
+}
+
+const currentDate = ref(new Date())
+const currentYear = computed(() => currentDate.value.getFullYear())
+const currentMonth = computed(() => currentDate.value.getMonth() + 1)
+const selectedDate = ref(currentDate.value.getDate())
+// const routines = ref(JSON.parse(localStorage.getItem('routines')) || [])
+
 const showRoutineModal = ref(false)
 const showAiModal = ref(false)
 const showVideoModal = ref(false)
 const currentStep = ref(1)
 const selectedCategory = ref(null)
 const selectedExperience = ref(null)
+const showSetCountModal = ref(false)
+const editingRoutine = ref(null)
+
+const handleShowSetCountModal = (routine) => {
+  editingRoutine.value = routine
+  showSetCountModal.value = true
+}
+
+const saveRoutines = () => {
+  const key = `routines_${currentUser.value.id}`
+  localStorage.setItem(key, JSON.stringify(routines.value))
+}
+
+const addRoutine = (routine) => {
+  routines.value.push(routine)
+  saveRoutines()
+  showRoutineModal.value = false
+}
+
+const updateRoutine = (updatedRoutine) => {
+  const index = routines.value.findIndex(r => r.id === updatedRoutine.id && 
+    r.userId === currentUser.value.id) 
+  if (index !== -1) {
+    routines.value[index] = {
+      ...updatedRoutine,
+      userId: currentUser.value.id
+    }
+    saveRoutines() // localStorage에 저장
+  }
+}
+
+const deleteRoutine = (id) => {
+  routines.value = routines.value.filter(routine => 
+    !(routine.id === routineId && routine.userId === currentUser.value.id)
+  )
+  saveRoutines()
+}
+
+const handleSetCountConfirm = (setCount) => {
+  if (editingRoutine.value) {
+    updateRoutine({
+      ...editingRoutine.value,
+      sets: setCount.sets,
+      reps: setCount.reps
+    })
+  }
+  showSetCountModal.value = false
+  editingRoutine.value = null
+}
+
+// 선택된 날짜의 루틴 필터링
+const selectedDateRoutines = computed(() => {
+  if (!selectedDate.value) return []
+  
+  const selectedDateObj = new Date(
+    currentDate.value.getFullYear(),
+    currentDate.value.getMonth(),
+    selectedDate.value
+  )
+  
+  return routines.value.filter(routine => {
+    const routineDate = new Date(routine.date)
+    return routineDate.toDateString() === selectedDateObj.toDateString()
+  })
+})
 
 // 차트 관련 데이터
 const chartData = ref({
@@ -168,7 +278,6 @@ const monthlyStats = ref({
   totalHours: 48
 })
 
-// Computed
 const calendarDays = computed(() => {
   const days = []
   const firstDay = new Date(currentYear.value, currentMonth.value - 1, 1)
@@ -196,31 +305,25 @@ const calendarDays = computed(() => {
   return days
 })
 
-// Methods
 const previousMonth = () => {
-  if (currentMonth.value === 1) {
-    currentMonth.value = 12
-    currentYear.value--
-  } else {
-    currentMonth.value--
-  }
+  const newDate = new Date(currentDate.value)
+  newDate.setMonth(newDate.getMonth() - 1)
+  currentDate.value = newDate
+  // 날짜가 변경되면 선택된 날짜 초기화
+  selectedDate.value = null
 }
 
 const nextMonth = () => {
-  if (currentMonth.value === 12) {
-    currentMonth.value = 1
-    currentYear.value++
-  } else {
-    currentMonth.value++
-  }
+  const newDate = new Date(currentDate.value)
+  newDate.setMonth(newDate.getMonth() + 1)
+  currentDate.value = newDate
+  // 날짜가 변경되면 선택된 날짜 초기화
+  selectedDate.value = null
 }
 
-const selectDate = (day) => {
-  if (day.isCurrentMonth) {
-    selectedDate.value = day.date
-  }
+const selectDate = (date) => {
+  selectedDate.value = date
 }
-
 const closeRoutineModal = () => {
   showRoutineModal.value = false
 }
@@ -240,8 +343,19 @@ const nextStep = () => {
   }
 }
 
+const loadRoutines = async () => {
+  try {
+    if (userStore.isAuthenticated) {
+      const data = await routineApi.getRoutines()
+      routines.value = data
+    }
+  } catch (error) {
+    console.error('루틴 로드 실패:', error)
+  }
+}
+
 onMounted(() => {
-  
+  loadRoutines()
 })
 </script>
 
