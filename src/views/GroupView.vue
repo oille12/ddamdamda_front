@@ -13,15 +13,13 @@
     <!-- Main Content -->
     <main class="pt-6 pb-20">
       <div class="max-w-7xl mx-auto px-6">
-        
-        
         <!-- Search and Filter -->
         <div class="mb-6 flex flex-wrap gap-4 items-center justify-between">
           <!-- Search -->
           <div class="flex gap-2">
             <select 
               v-model="selectedStatus"
-              class="rounded-lg border p-2"
+              class="border rounded-lg px-3 py-2"
               @change="handleFilter"
             >
               <option value="">전체 상태</option>
@@ -31,12 +29,12 @@
             <input 
               v-model="searchKeyword"
               type="text"
-              placeholder="그룹 검색..."
-              class="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+              placeholder="검색어를 입력하세요."
+              class="border rounded-lg px-3 py-2"
             >
             <button 
               @click="handleSearch"
-              class="bg-black text-white px-4 py-2 rounded-full hover:bg-gray-800"
+              class="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800"
             >
               검색
             </button>
@@ -44,6 +42,7 @@
 
           <!-- Filter -->
           <div class="flex gap-2">
+
             <!-- Create Group Link -->
             <router-link 
               to="/group/write" 
@@ -54,25 +53,42 @@
           </div>
         </div>
 
+        <!-- Loading State -->
+        <div v-if="isLoading" class="flex justify-center items-center py-20">
+          <div class="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-black"></div>
+        </div>
+
         <!-- Empty State -->
-        <div v-if="groups.length === 0" class="text-center py-20">
-          <div class="mb-4">
-            <svg class="w-16 h-16 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
+        <div 
+          v-else-if="groups.length === 0" 
+          class="text-center py-20"
+        >
+          <div class="mb-6">
+            <div class="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-4">
+              <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+            </div>
+            <h3 class="text-xl font-medium text-gray-900 mb-2">
+              {{ getEmptyStateMessage }}
+            </h3>
+            <p class="text-gray-500 mb-6">{{ getEmptyStateDescription }}</p>
+            <div class="flex justify-center gap-4">
+              <button
+                v-if="selectedStatus || searchKeyword"
+                @click="resetFilters"
+                class="text-gray-600 hover:text-gray-900"
+              >
+                필터 초기화
+              </button>
+              <router-link 
+                to="/group/write"
+                class="inline-flex items-center px-4 py-2 bg-black text-white rounded-full hover:bg-gray-800"
+              >
+                새 그룹 만들기
+              </router-link>
+            </div>
           </div>
-          <h2 class="text-xl font-semibold text-gray-900 mb-2">
-            그룹 메이트 모집글이 없어요
-          </h2>
-          <p class="text-gray-600 mb-4">
-            가장 먼저 운동 그룹을 만들어 보시는건 어떨까요?
-          </p>
-          <router-link 
-            to="/group/write"
-            class="inline-flex items-center px-4 py-2 bg-black text-white rounded hover:bg-gray-800"
-          >
-            새 그룹 만들기
-          </router-link>
         </div>
 
         <!-- Groups Grid -->
@@ -84,26 +100,38 @@
             v-for="group in groups" 
             :key="group.groupId" 
             :group="group"
+            @join="handleJoin"
           />
         </div>
 
-        <!-- Pagination -->
-        <div class="mt-8 flex justify-center" v-if="totalPages > 1">
-          <nav class="flex items-center gap-2">
-            <button 
-              v-for="page in totalPages" 
+                <!-- Pagination Info & Controls -->
+        <div class="mt-8" v-if="totalPages > 0">
+          <!-- Pagination Info -->
+          <div class="flex justify-between items-center mb-4 text-sm text-gray-600">
+            <div>
+              총 {{ totalPages }} 페이지
+            </div>
+            <div v-if="searchKeyword || selectedStatus">
+              검색된 그룹: {{ groups.length }}개
+            </div>
+          </div>
+
+          <!-- Pagination -->
+          <div class="flex justify-center items-center gap-2">
+            <button
+              v-for="page in totalPages"
               :key="page"
-              @click="changePage(page)"
+              class="w-8 h-8 rounded-full flex items-center justify-center"
               :class="[
-                'px-3 py-1 rounded',
                 currentPage === page 
-                  ? 'bg-black text-white' 
-                  : 'bg-gray-100 hover:bg-gray-200'
+                  ? 'bg-black text-[#dcff1f]' 
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
               ]"
+              @click="changePage(page)"
             >
               {{ page }}
             </button>
-          </nav>
+          </div>
         </div>
       </div>
     </main>
@@ -111,7 +139,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useGroupStore } from '@/stores/group'
 import { useUserStore } from '@/stores/user'
 import GroupInfo from '@/components/group/GroupInfo.vue'
@@ -124,9 +152,37 @@ const currentPage = ref(1)
 const totalPages = ref(0)
 const searchKeyword = ref('')
 const selectedStatus = ref('')
+const isLoading = ref(false)
+
+// 빈 상태 메시지 계산
+const getEmptyStateMessage = computed(() => {
+  if (selectedStatus.value) {
+    return `${selectedStatus.value} 상태의 그룹이 없습니다`
+  }
+  if (searchKeyword.value) {
+    return '검색 결과가 없습니다'
+  }
+  return '그룹 메이트 모집글이 없어요'
+})
+
+// 빈 상태 설명 계산
+const getEmptyStateDescription = computed(() => {
+  if (selectedStatus.value || searchKeyword.value) {
+    return '다른 검색어나 필터를 시도해보세요'
+  }
+  return '가장 먼저 운동 그룹을 만들어 보시는건 어떨까요?'
+})
+
+// 필터 초기화
+const resetFilters = () => {
+  selectedStatus.value = ''
+  searchKeyword.value = ''
+  fetchGroups()
+}
 
 // 그룹 목록 조회
 const fetchGroups = async (page = 1) => {
+  isLoading.value = true
   try {
     const response = await groupStore.fetchGroups({
       pageNum: page,
@@ -138,7 +194,16 @@ const fetchGroups = async (page = 1) => {
     totalPages.value = response.pages
     currentPage.value = page
   } catch (error) {
-    console.error('그룹 목록 조회 실패:', error)
+    if (error.response?.status === 400) {
+      // 데이터가 없는 경우
+      groups.value = []
+      totalPages.value = 0
+      currentPage.value = 1
+    } else {
+      console.error('그룹 목록 조회 실패:', error)
+    }
+  } finally {
+    isLoading.value = false
   }
 }
 
@@ -154,7 +219,18 @@ const handleSearch = () => {
 
 // 필터
 const handleFilter = () => {
+  currentPage.value = 1
   fetchGroups(1)
+}
+
+// 참가 처리
+const handleJoin = async (groupId) => {
+  try {
+    await groupStore.joinGroup(groupId)
+    await fetchGroups(currentPage.value)
+  } catch (error) {
+    console.error('그룹 참가 실패:', error)
+  }
 }
 
 onMounted(() => {

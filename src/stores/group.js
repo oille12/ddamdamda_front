@@ -7,7 +7,8 @@ export const useGroupStore = defineStore('group', {
     groups: [],
     totalPages: 0,
     currentPage: 1,
-    selectedGroup: null
+    selectedGroup: null,
+    groupMembers: new Map()
   }),
 
   actions: {
@@ -15,7 +16,7 @@ export const useGroupStore = defineStore('group', {
       try {
         const requestData = {
           pageNum: pageRequest?.pageNum || 1,
-          pageSize: pageRequest?.pageSize || 9,
+          pageSize: pageRequest?.pageSize || 3,
           search: pageRequest?.search || null,
           mateStatus: pageRequest?.mateStatus || null,
         }
@@ -156,6 +157,77 @@ export const useGroupStore = defineStore('group', {
         return response.data
       } catch (error) {
         console.error('사용자 그룹 조회 에러:', error)
+        throw error
+      }
+    },
+
+    async getGroupMembers(groupId) {
+      try {
+        const response = await api.get(`/groupmembers/${groupId}`)
+        this.groupMembers.set(groupId, response.data)
+        return response.data
+      } catch (error) {
+        console.error('그룹 멤버 조회 실패:', error)
+        return []
+      }
+    },
+
+    async checkMembershipStatus(groupId, userId) {
+      try {
+        let members = this.groupMembers.get(groupId)
+        if (!members) {
+          members = await this.getGroupMembers(groupId)
+        }
+        return members.some(member => member.id === userId)
+      } catch (error) {
+        console.error('멤버십 상태 확인 실패:', error)
+        return false
+      }
+    },
+
+    async joinGroup(groupId, userId) {
+      try {
+        const response = await api.post('/groupmembers', {
+          groupId: groupId,
+          userId: userId
+        })
+        // 멤버 리스트 갱신
+        await this.getGroupMembers(groupId)
+        return response.data
+      } catch (error) {
+        console.error('그룹 참가 실패:', error)
+        throw error
+      }
+    },
+
+    async leaveGroup(groupId, userId) {
+      try {
+        const response = await api.delete('/groupmembers', {
+          data: {
+            groupId: groupId,
+            userId: userId
+          }
+        })
+        // 멤버 리스트 갱신
+        await this.getGroupMembers(groupId)
+        return response.data
+      } catch (error) {
+        console.error('그룹 탈퇴 실패:', error)
+        throw error
+      }
+    },
+        // stores/group.js에 메서드 추가
+    async refreshGroupInfo(groupId) {
+      try {
+        const response = await api.get(`/groupinfo/${groupId}`)
+        // 그룹 목록에서 해당 그룹 정보 업데이트
+        const index = this.groups.findIndex(g => g.groupId === groupId)
+        if (index !== -1) {
+          this.groups[index] = response.data
+        }
+        return response.data
+      } catch (error) {
+        console.error('그룹 정보 갱신 실패:', error)
         throw error
       }
     }
