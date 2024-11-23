@@ -84,19 +84,40 @@ const hasRoutineOnDate = (date) => {
   return props.routines.some(routine => routine.exerciseDate === dateStr)
 }
 
+const isAllRoutinesCompleted = (date) => {
+  if (!props.routines || !Array.isArray(props.routines)) return false
+  
+  const year = props.currentYear
+  const month = String(props.currentMonth).padStart(2, '0')
+  const day = String(typeof date === 'number' ? date : date.getDate()).padStart(2, '0')
+  const dateStr = `${year}-${month}-${day}`
+
+  // 해당 날짜의 루틴들 찾기
+  const dateRoutines = props.routines.filter(routine => routine.exerciseDate === dateStr)
+  
+  // 루틴이 없는 경우 false 반환
+  if (dateRoutines.length === 0) return false
+  
+  // 모든 루틴이 완료 상태인지 확인
+  return dateRoutines.every(routine => routine.isCompleted === 1)
+}
+
 // 날짜별 클래스 계산
 const getDayClasses = (day) => {
+  const isCompleted = isAllRoutinesCompleted(day.date)
+
   return {
     'text-gray-400': !day.isCurrentMonth,
     'bg-[#dcff1f] rounded-full': day.isToday,
-    'bg-black text-white rounded-full': day.isSelected && !day.isToday,
+    'bg-black text-white rounded-full': day.isSelected && !day.isToday && !isCompleted,
+    'bg-[#BFDBFE] rounded-full': isCompleted && !day.isToday,
     'relative hover:rounded-full': true,
     'after:absolute after:content-[""] after:top-9 after:left-1/2 after:-translate-x-1/2 after:w-1.5 after:h-1.5 after:bg-red-400 after:rounded-full': day.hasRoutine
   }
 }
 
 watch (() => props.routines, () => {
-  console.log('루틴 수정:', props.routines)
+  // console.log('루틴 수정:', props.routines)
 }, {deep:true})
 </script>
 
@@ -120,7 +141,7 @@ watch (() => props.routines, () => {
     </div>
 
     <!-- 달력 내부 -->
-    <div class="grid grid-cols-7 gap-">
+    <div class="grid grid-cols-7 gap-6">
       <!-- 요일 헤더 -->
       <template v-for="(day, index) in weekDays" :key="index">
         <div 

@@ -20,15 +20,42 @@ ChartJS.register(
 )
 
 const props = defineProps({
-  chartData: {
-    type: Object,
-    required: true
-  },
-  chartOptions: {
+  weeklyData: {
     type: Object,
     required: true
   }
 })
+
+const chartOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  scales: {
+    y: {
+      beginAtZero: true,
+      grid: {
+        color: 'rgba(255, 255, 255, 0.1)'
+      },
+      ticks: {
+        color: '#ffffff',
+        font: {
+          size: 10
+        }
+      }
+    },
+    x: {
+      grid: { display: false },
+      ticks: {
+        color: '#ffffff',
+        font: {
+          size: 10
+        }
+      }
+    }
+  },
+  plugins: {
+    legend: { display: false }
+  }
+}
 </script>
 
 <template>
@@ -42,7 +69,7 @@ const props = defineProps({
     </div>
     <div class="h-24">
       <Bar
-        :data="chartData"
+        :data="weeklyData"
         :options="chartOptions"
       />
     </div>
