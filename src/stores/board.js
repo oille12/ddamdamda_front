@@ -15,6 +15,19 @@ export const useBoardStore = defineStore('board', {
 
 
  actions: {
+  async createBoard(formData) {
+  try {
+    const response = await api.post('/board', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+    return response.data
+  } catch (error) {
+    console.error('게시글 생성 에러:', error)
+    throw error
+  }
+},  
   async getBoards(pageRequest) {
     try{
       const requestData = {

@@ -12,6 +12,7 @@
     "@headlessui/vue": "^1.7.23",
     "@heroicons/vue": "^2.1.5",
     "axios": "^1.7.7",
+    "date-fns": "^4.1.0",
     "ddd-pr1": "file:",
     "pinia": "^2.2.6",
     "recharts": "^2.13.3",

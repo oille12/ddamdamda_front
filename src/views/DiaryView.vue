@@ -56,20 +56,15 @@
                 @show-ai-modal="showAiModal = true"
                 @update-routine="updateRoutine"
                 @delete-routine="deleteRoutine"
-                @show-video="showVideoModal = true"
+                @show-video="handleShowVideo"
                 @show-set-count-modal="handleShowSetCountModal"
               />
   
               <!-- 차트 그리드 -->
-              <div class="grid grid-cols-2 gap-4">
-                <WeeklyProgress 
-                  :chart-data="chartData"
-                  :chart-options="chartOptions"
-                  class="col-span-2"
-                />
-                <ExerciseParts :parts="exerciseParts" />
-                <MonthlyStats :stats="monthlyStats" />
-              </div>
+              <StatsChart
+                :selected-date="new Date(currentYear, currentMonth - 1, selectedDate)"
+                :user-id="currentUser.id"
+              />
             </div>
           </div>
         </div>
@@ -96,16 +91,15 @@
 
       <AiRoutineModal
         v-if="showAiModal"
-        @close="closeAiModal"
-        :current-step="currentStep"
-        :experience-levels="experienceLevels"
-        :selected-experience="selectedExperience"
-        @previous-step="currentStep--"
-        @next-step="nextStep"
+        @close="handleCloseAiModal"
+        :current-step="1"
+        :selected-date="new Date(currentYear, currentMonth-1, selectedDate)"
+        @routines-saved="handleRoutinesSaved"
       />
       
       <VideoModal
         v-if="showVideoModal"
+        :exercise-title="selectedExerciseTitle"
         @close="closeVideoModal"
       />
     </div>
@@ -119,21 +113,22 @@ import { storeToRefs } from 'pinia'
 import { useUserStore } from '@/stores/user'
 import DiaryCalendar from '@/components/diary/DiaryCalendar.vue'
 import DiaryRoutines from '@/components/diary/DiaryRoutines.vue'
-import WeeklyProgress from '@/components/diary/charts/WeeklyProgress.vue'
-import ExerciseParts from '@/components/diary/charts/ExerciseParts.vue'
-import MonthlyStats from '@/components/diary/charts/MonthlyStats.vue'
+import StatsChart from '@/components/diary/StatsChart.vue'
 import RoutineModal from '@/components/diary/modals/RoutineModal.vue'
 import AiRoutineModal from '@/components/diary/modals/AiRoutineModal.vue'
 import VideoModal from '@/components/diary/modals/VideoModal.vue'
 import SetCountModal from '@/components/diary/modals/SetCountModal.vue'
 import { routine } from '@/stores/routine'
 import { exercises } from '@/stores/exercise'
+import { useAiRoutineStore } from '@/stores/aiRoutine'
+import { format } from 'date-fns'
 
 const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
 const routines = ref([])
 const exercisesList = ref([])
+const selectedExerciseTitle = ref('')
 const { user: currentUser } = storeToRefs(userStore)
 
 const userRoutines = computed(() => {
@@ -181,17 +176,19 @@ const handleAddRoutines = async (newRoutines) => {
   }
 }
 
-const handleRoutineStatusUpdate  = async ({ routineId, completed }) => {
+const handleRoutineStatusUpdate  = async ({ routineId }) => {
   try {
-    // API를 통해 상태 업데이트
-    await routine.updateRoutineStatus(routineId, completed)
-    // 성공 시 루틴 목록 새로고침
+    await routine.updateRoutineStatus(routineId)
     await loadRoutines()
   } catch (error) {
     console.error('루틴 상태 업데이트 실패:', error)
-    // 에러 발생 시 사용자에게 알림
     alert('루틴 상태 업데이트에 실패했습니다.')
   }
+}
+
+const handleShowVideo = (title) => {
+  selectedExerciseTitle.value = title
+  showVideoModal.value = true
 }
 
 const currentDate = ref(new Date())
@@ -208,6 +205,79 @@ const selectedCategory = ref(null)
 const selectedExperience = ref(null)
 const showSetCountModal = ref(false)
 const editingRoutine = ref(null)
+
+const aiRoutineStore = useAiRoutineStore()
+
+const handleShowAiModal = () => {
+  showAiModal.value = true
+}
+
+const handleCloseAiModal = () => {
+  showAiModal.value = false
+  aiRoutineStore.reset()
+}
+
+// 특정 날짜의 루틴만 로드하는 함수
+const loadRoutinesByDate = async (date) => {
+  try {
+    if (userStore.isAuthenticated && date) {
+      const userId = userStore.user.id
+      const formattedDate = format(date, 'yyyy-MM-dd')
+
+      const data = await routine.getRoutinesByDate(userId, formattedDate)
+
+      if (Array.isArray(data)) {
+        // 현재 날짜의 루틴만 필터링 (서버에서 like 검색으로 인해 다른 날짜도 포함될 수 있음)
+        const exactDateRoutines = data.filter(r => r.exerciseDate === formattedDate)
+        
+        const currentRoutines = routines.value || []
+        const filteredRoutines = currentRoutines.filter(r => r.exerciseDate !== formattedDate)
+        routines.value = [...filteredRoutines, ...exactDateRoutines]
+      }
+    }
+  } catch (error) {
+    console.error('선택 날짜 루틴 로드 실패:', error)
+  }
+}
+
+// 월 변경 시 해당 월의 모든 루틴 로드
+const loadMonthRoutines = async () => {
+  try {
+    if (userStore.isAuthenticated) {
+      const userId = userStore.user.id
+      const data = await routine.getRoutinesByMonth(
+        userId, 
+        currentYear.value, 
+        currentMonth.value
+      )
+      
+      if (Array.isArray(data)) {
+        const yearMonth = format(new Date(currentYear.value, currentMonth.value - 1), 'yyyy-MM')
+        const monthRoutines = data.filter(r => r.exerciseDate.startsWith(yearMonth))
+        
+        const otherMonthRoutines = routines.value?.filter(r => !r.exerciseDate.startsWith(yearMonth)) || []
+        routines.value = [...otherMonthRoutines, ...monthRoutines]
+      }
+    }
+  } catch (error) {
+    console.error('월별 루틴 로드 실패:', error)
+  }
+}
+
+const handleRoutinesSaved = async ({ routines: newRoutines, date }) => {
+  try {
+    if (Array.isArray(newRoutines)) {
+      handleCloseAiModal()
+      await loadRoutinesByDate(new Date(date))
+    }
+    
+    handleCloseAiModal()
+    alert('AI 추천 루틴이 저장되었습니다!')
+  } catch (error) {
+    console.error('루틴 저장 후 처리 실패:', error)
+    alert('루틴 저장에 실패했습니다. 다시 시도해주세요.')
+  }
+}
 
 const handleShowSetCountModal = (routine) => {
   editingRoutine.value = routine
@@ -261,63 +331,15 @@ const handleSetCountConfirm = async (setCount) => {
 // 선택된 날짜의 루틴 필터링
 const selectedDateRoutines = computed(() => {
   if (!selectedDate.value || !Array.isArray(routines.value)) return []
+
   const year = currentYear.value
   const month = String(currentMonth.value).padStart(2, '0')
   const day = String(selectedDate.value).padStart(2, '0')
   const selectedDateStr = `${year}-${month}-${day}`
-  
-  console.log('Filtering routines for date:', selectedDateStr)
-  console.log('Available routines:', routines.value)
-  
-  const filtered = routines.value.filter(routine => 
-    routine.exerciseDate === selectedDateStr &&
-    routine.userId === currentUser.value?.id
+  const filtered = routines.value.filter(routine => routine.exerciseDate === selectedDateStr &&
+      routine.userId === currentUser.value?.id
   )
-  
-  console.log('Filtered routines:', filtered)
   return filtered
-})
-
-// 차트 관련 데이터
-const chartData = ref({
-  labels: ['월', '화', '수', '목', '금', '토', '일'],
-  datasets: [{
-    data: [60, 45, 30, 90, 60, 0, 45],
-    backgroundColor: '#dcff1f',
-    borderRadius: 4
-  }]
-})
-
-const chartOptions = ref({
-  responsive: true,
-  maintainAspectRatio: false,
-  scales: {
-    y: {
-      beginAtZero: true,
-      grid: { color: '#333' },
-      ticks: { color: '#666' }
-    },
-    x: {
-      grid: { display: false },
-      ticks: { color: '#666' }
-    }
-  },
-  plugins: {
-    legend: { display: false }
-  }
-})
-
-const exerciseParts = ref([
-  { name: '가슴', percentage: 25 },
-  { name: '등', percentage: 20 },
-  { name: '하체', percentage: 30 },
-  { name: '어깨', percentage: 15 },
-  { name: '팔', percentage: 10 },
-])
-
-const monthlyStats = ref({
-  workoutDays: 12,
-  totalHours: 48
 })
 
 const calendarDays = computed(() => {
@@ -347,26 +369,45 @@ const calendarDays = computed(() => {
   return days
 })
 
-const previousMonth = () => {
+const previousMonth = async () => {
   const newDate = new Date(currentDate.value)
   newDate.setMonth(newDate.getMonth() - 1)
   currentDate.value = newDate
-  // 날짜가 변경되면 선택된 날짜 초기화
   selectedDate.value = null
+  await loadMonthRoutines()
 }
 
-const nextMonth = () => {
+const nextMonth = async () => {
   const newDate = new Date(currentDate.value)
   newDate.setMonth(newDate.getMonth() + 1)
   currentDate.value = newDate
-  // 날짜가 변경되면 선택된 날짜 초기화
   selectedDate.value = null
+  await loadMonthRoutines()
 }
 
 const selectDate = async (date) => {
   selectedDate.value = date
-  await loadRoutines()
+  await loadRoutinesByDate(new Date(currentYear.value, currentMonth.value - 1, date))
 }
+
+const loadStatistics = async () => {
+  try {
+    const currentDate = new Date(currentYear.value, currentMonth.value - 1, selectedDate.value)
+    const formattedDate = format(currentDate, 'yyyy-MM-dd')
+
+    // 루틴 개수와 완료된 루틴 개수 동시에 조회
+    const [totalCount, completedCount] = await Promise.all([
+      routine.getRoutineCount(userStore.user.id, formattedDate),
+      routine.getCompletedRoutineCount(userStore.user.id, formattedDate)
+    ])
+
+    // 통계 데이터 업데이트
+    // ... 통계 관련 상태 업데이트 로직
+  } catch (error) {
+    console.error('통계 데이터 로드 실패:', error)
+  }
+}
+
 const closeRoutineModal = () => {
   showRoutineModal.value = false
 }
@@ -378,6 +419,7 @@ const closeAiModal = () => {
 
 const closeVideoModal = () => {
   showVideoModal.value = false
+  selectedExerciseTitle.value = ''
 }
 
 const nextStep = () => {
@@ -390,23 +432,18 @@ const loadRoutines = async () => {
   try {
     if (userStore.isAuthenticated) {
       const data = await routine.getRoutines()
-      console.log('API Response data:', data) // 응답 데이터 확인
       routines.value = Array.isArray(data) ? data : []
-      console.log('Current routines:', routines.value) // 설정된 routines 확인
-      console.log('Selected date:', selectedDate.value) // 선택된 날짜 확인
-      console.log('Current user:', currentUser.value) // 현재 사용자 확인
+      console.log('불러온 루틴:', routines.value)
     }
   } catch (error) {
     console.error('루틴 로드 실패:', error)
-    routines.value = [] // 에러 시 빈 배열로 초기화
+    routines.value = []
   }
 }
 
 onMounted(async () => {
   await fetchExercises()
-  await loadRoutines()
-  console.log('Selected date routines:', selectedDateRoutines.value) // 선택된 날짜의 루틴 확인
-
+  await loadMonthRoutines()
 })
 </script>
 

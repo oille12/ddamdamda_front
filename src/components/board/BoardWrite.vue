@@ -123,13 +123,25 @@
   }
 
   try {
-    const formData = {
+    const formData = new FormData()
+    const token = localStorage.getItem('token')
+    const userId = JSON.parse(atob(token.split('.')[1])).id
+
+    const boardData = {
+      userId: userId,
       category: form.category,
       title: form.title,
-      content: form.content,
-      images: form.images
+      content: form.content
     }
+    formData.append('board', new Blob([JSON.stringify(boardData)], {
+      type: 'application/json'
+    }))
     
+    if(form.images && form.images.length > 0) {
+      form.images.forEach(file => {
+        formData.append('images', file)
+      })
+    }
     console.log('전송 데이터:', formData)
     await boardStore.createBoard(formData)
     router.push('/board')

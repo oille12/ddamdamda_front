@@ -79,8 +79,8 @@ const handleSetCountConfirm = (setCount) => {
 }
 
 const completeRoutine = async(routine) => {
-  if(routine.is_completed === 1) {
-    return
+  if(routine.isCompleted === 1) {
+    return false
   }
 
   const today = new Date()
@@ -91,25 +91,20 @@ const completeRoutine = async(routine) => {
 
   if(routineDate > today) {
     alert('미래 날짜의 루틴은 완료 처리할 수 없습니다.')
-    return
+    return false
   }
 
   const confirmed = confirm('완료 처리하시겠습니까?')
   if(!confirmed) {
-    return
+    return false
   }
 
   try {
     emit('update-routine-status', {
-      routineId : routine.id,
-      completed: true
+      routineId : routine.id
     })
-
-    // routine.disabled = true // 
-    // routine.completed = true //
   } catch(error) {
     console.error('루틴 완료처리 중 오류 발생:', error)
-    // routine.completed = false // 
     alert('완료 처리 중 오류 발생했습니다.')
   }
 }
@@ -136,17 +131,21 @@ const completeRoutine = async(routine) => {
         <!-- AI 루틴 생성 버튼 -->
         <button 
           @click="emit('show-ai-modal')"
-          class="px-4 py-2 rounded-full text-sm ai-button flex items-center space-x-2"
+          class="ai-generate-button group flex items-center space-x-2 px-4 py-2 rounded-full text-sm transition-all duration-300 hover:shadow-lg"
         >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path 
-              stroke-linecap="round" 
-              stroke-linejoin="round" 
-              stroke-width="2" 
-              d="M13 10V3L4 14h7v7l9-11h-7z" 
-            />
-          </svg>
-          <span>AI 루틴 생성</span>
+          <div class="flex items-center space-x-2">
+            <div class="ai-badge-icon flex items-center justify-center">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path 
+                  stroke-linecap="round" 
+                  stroke-linejoin="round" 
+                  stroke-width="2" 
+                  d="M13 10V3L4 14h7v7l9-11h-7z" 
+                />
+              </svg>
+            </div>
+            <span class="font-medium">AI 루틴 생성</span>
+          </div>
         </button>
       </div>
     </div>
@@ -162,28 +161,40 @@ const completeRoutine = async(routine) => {
         :key="routine.id" 
         class="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
       >
-        <div class="flex items-center justify-between">
-          <div class="flex items-center space-x-3"
-            :class="{ 'completed-routine': routine.is_completed === 1 }"
-          >
+        <div class="flex items-center justify-between"
+          :class="{ 'pointer-events-none': routine.isCompleted === 1 }"
+        >
+          <div class="flex items-center space-x-3">
             <input 
               type="checkbox" 
               class="w-5 h-5 rounded text-black focus:ring-black"
-              :checked="routine.is_completed === 1"
-              :disabled="routine.is_completed === 1"
+              :checked="routine.isCompleted === 1"
+              :disabled="routine.isCompleted === 1"
               @change="completeRoutine(routine)"
             >
             <div>
-              <div class="font-medium">{{ routine.title }}</div>
-              <div class="text-sm text-gray-500">{{ routine.sets }}세트 × {{ routine.reps }}회</div>
+              <div 
+                class="font-medium"
+                :class="{ 'line-through text-gray-400': routine.isCompleted === 1 }"
+              >
+              {{ routine.title }}
+              </div>
+              <div 
+                class="text-sm text-gray-500"
+                :class="{ 'line-through text-gray-300': routine.isCompleted === 1 }"
+                >
+                {{ routine.sets }}세트 × {{ routine.reps }}회
+              </div>
             </div>
           </div>
 
           <!-- 액션 버튼 그룹 -->
           <div class="flex items-center space-x-2">
             <button 
-              @click="emit('show-video', routine.id)"
+              @click="emit('show-video', routine.title)"
               class="p-1.5 hover:text-gray-700 transition-colors duration-200"
+              :disabled="routine.isCompleted === 1"
+              :class="{ 'opacity-50': routine.isCompleted === 1 }"
               title="영상 가이드"
             >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -196,6 +207,8 @@ const completeRoutine = async(routine) => {
             <button 
               @click="$emit('show-set-count-modal', routine)"
               class="p-1.5 hover:text-gray-700 transition-colors duration-200"
+              :disabled="routine.isCompleted === 1"
+              :class="{ 'opacity-50': routine.isCompleted === 1 }"
               title="수정"
             >
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -211,6 +224,8 @@ const completeRoutine = async(routine) => {
             <button 
               @click="emit('delete-routine', routine.id)"
               class="p-1.5 hover:text-red-500 transition-colors duration-200"
+              :disabled="routine.isCompleted === 1"
+              :class="{ 'opacity-50': routine.isCompleted === 1 }"
               title="삭제"
             >
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -261,13 +276,66 @@ const completeRoutine = async(routine) => {
     box-shadow: 0 0 0 0 rgba(220, 255, 31, 0);
   }
 }
-.completed-routine {
-  opacity: 0.5;
+
+button:disabled {
+  cursor: not-allowed;
   pointer-events: none;
 }
 
-.completed-routine input[type="checkbox"] {
+input[type="checkbox"] {
+  opacity: 0.5;
   cursor: not-allowed;
   background-color: #e5e5e5;
+}
+
+.hover\:bg-gray-100:disabled {
+  background-color: inherit;
+}
+.ai-generate-button {
+  background: linear-gradient(to right, #5c54f6, #7C3AED);
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.ai-generate-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to right, #5c54f6, #8B5CF6);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.ai-generate-button:hover::before {
+  opacity: 1;
+}
+
+.ai-generate-button > div {
+  position: relative;
+  z-index: 1;
+}
+
+.ai-badge-icon {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 4px;
+  border-radius: 50%;
+  transition: transform 0.3s ease;
+}
+
+.ai-generate-button:hover .ai-badge-icon {
+  transform: rotate(12deg);
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
 }
 </style>

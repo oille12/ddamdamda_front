@@ -20,7 +20,7 @@
                :key="link.path"
                :to="link.path"
                class="text-sm mx-3"
-               :class="route.path.includes(link.path) ? 'text-gray-900 font-medium' : 'text-gray-600'"
+               :class="route.path.includes(link.path) ? 'text-gray-800 font-bold' : 'text-gray-500'"
              >
                {{ link.name }}
              </router-link>
