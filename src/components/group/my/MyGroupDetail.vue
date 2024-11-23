@@ -43,13 +43,24 @@
                 <span class="text-sm text-gray-500">{{ groupInfo?.region }}</span>
               </div>
   
-              <!-- 멤버 현황 (클릭시 모달) -->
-              <button 
-                class="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-all text-sm w-auto border"
-                @click="showModal = true"
-              >
-                멤버 {{ groupInfo?.currentMembers }}/{{ groupInfo?.memberCount }}명
-              </button>
+              <div class="flex items-center gap-3">
+                <!-- 멤버 현황 (클릭시 모달) -->
+                <button 
+                  class="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-all text-sm w-auto border"
+                  @click="showModal = true"
+                >
+                  멤버 {{ groupInfo?.currentMembers }}/{{ groupInfo?.memberCount }}명
+                </button>
+
+                <!-- 그룹 탈퇴 버튼 (관리자가 아닐 경우에만 표시) -->
+                <button
+                  v-if="!isAdmin"
+                  @click="confirmLeaveGroup"
+                  class="px-4 py-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-full transition-all text-sm border border-red-200"
+                >
+                  그룹 탈퇴
+                </button>
+              </div>
             </div>
   
             <h1 class="text-3xl font-bold text-gray-900 mb-4">{{ groupInfo?.groupName }}</h1>
@@ -64,7 +75,10 @@
               <h2 class="text-xl font-bold text-gray-900">전체 공지</h2>
               <RouterLink
                 v-if="isAdmin"
-                to="./group-notice-write"
+                :to="{
+                  name: 'GroupNoticeWrite',
+                  params: { groupId: route.params.groupId }
+                }"
                 class="px-4 py-2 bg-black text-sm rounded-full hover:bg-gray-900 transition-all"
                 style="color: #dcff1f;"
               >
@@ -82,7 +96,7 @@
               <RouterLink
                 v-for="notice in notices"
                 :key="notice.gnoticeId"
-                :to="`./group-notice-detail/${notice.gnoticeId}`"
+                :to="`/group-notice-detail/${notice.gnoticeId}`"
                 class="block py-4 px-6 border border-gray-100 rounded-xl hover:bg-gray-50 transition-all"
               >
                 <h3 class="text-lg font-medium text-gray-900 mb-2">{{ notice.title }}</h3>
@@ -125,53 +139,26 @@
               </button>
             </div>
           </div>
-  
+
           <div class="p-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
-            <!-- 관리자 섹션 -->
-            <div v-if="adminInfo" class="mb-6">
-              <h4 class="text-sm font-medium text-gray-500 mb-3">관리자</h4>
-              <div class="flex items-center space-x-4 p-3 bg-gray-50 rounded-xl">
+            <div class="space-y-3">
+              <div 
+                v-for="member in members" 
+                :key="member.id"
+                class="flex items-center space-x-4 p-3 hover:bg-gray-50 rounded-xl transition-colors"
+              >
+                <!-- 프로필 이미지 -->
                 <div class="relative">
-                  <!-- 왕관 아이콘 -->
-                  <div class="absolute -top-2 -right-2 bg-black rounded-full p-1" style="color: #dcff1f;">
+                  <!-- 관리자일 경우 왕관 아이콘 -->
+                  <div 
+                    v-if="member.id === groupInfo?.adminId"
+                    class="absolute -top-2 -right-2 bg-black rounded-full p-1" 
+                    style="color: #dcff1f;"
+                  >
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4l3 7h6l-5 5 2 7-6-4-6 4 2-7-5-5h6l3-7z" />
                     </svg>
                   </div>
-                  <!-- 프로필 이미지 -->
-                  <div class="w-14 h-14 rounded-full overflow-hidden bg-gray-200">
-                    <img 
-                      v-if="adminInfo.profileImage"
-                      :src="adminInfo.profileImage"
-                      :alt="adminInfo.username"
-                      class="w-full h-full object-cover"
-                    />
-                    <div v-else class="w-full h-full flex items-center justify-center">
-                      <span class="text-xl text-gray-600">{{ adminInfo.username[0] }}</span>
-                    </div>
-                  </div>
-                </div>
-                <div>
-                  <div class="font-medium text-base">{{ adminInfo.username }}</div>
-                  <span 
-                    class="text-xs mt-1 inline-flex items-center bg-black px-2 py-0.5 rounded-full"
-                    style="color: #dcff1f;"
-                  >
-                    관리자
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <!-- 일반 멤버 섹션 -->
-            <div>
-              <h4 class="text-sm font-medium text-gray-500 mb-3">멤버</h4>
-              <div class="space-y-3">
-                <div 
-                  v-for="member in regularMembers" 
-                  :key="member.id"
-                  class="flex items-center space-x-4 p-3 hover:bg-gray-50 rounded-xl transition-colors"
-                >
                   <div class="w-12 h-12 rounded-full overflow-hidden bg-gray-200">
                     <img 
                       v-if="member.profileImage"
@@ -183,7 +170,18 @@
                       <span class="text-xl text-gray-600">{{ member.username[0] }}</span>
                     </div>
                   </div>
+                </div>
+
+                <!-- 사용자 정보 -->
+                <div class="flex-1">
                   <div class="font-medium">{{ member.username }}</div>
+                  <span 
+                    v-if="member.id === groupInfo?.adminId"
+                    class="text-xs mt-1 inline-flex items-center bg-black px-2 py-0.5 rounded-full"
+                    style="color: #dcff1f;"
+                  >
+                    관리자
+                  </span>
                 </div>
               </div>
             </div>
@@ -198,7 +196,6 @@
   import { useRoute, useRouter } from 'vue-router'
   import { useGroupStore } from '@/stores/group'
   import { useUserStore } from '@/stores/user'
-  import { storeToRefs } from 'pinia'
   
   const route = useRoute()
   const router = useRouter()
@@ -214,9 +211,6 @@
   const totalPages = ref(0)
   const groupInfo = ref(null)
   const adminInfo = ref(null)
-  const regularMembers = computed(() => {
-  return members.value.filter(member => member.id !== groupInfo.value?.adminId)
-})
 
   const groupId = computed(() => route.params.groupId)
   
@@ -247,46 +241,28 @@
     }
   }
   
-  // 멤버 관련 로직 수정
-  const fetchMembers = async () => {
-    try {
-      console.log('멤버 조회 시작, groupId:', groupId.value)
-      const membersList = await groupStore.getGroupMembers(groupId.value)
-      console.log('가져온 멤버 목록:', membersList)
-      
-      // 일반 멤버 정보 설정
-      members.value = await Promise.all(
-        membersList.map(async (member) => {
-          let profileImage = null
-          if (member.profileImageId) {
-            profileImage = await userStore.getProfileImage(member.profileImageId)
-          }
-          return { ...member, profileImage }
-        })
-      )
-
-      // 관리자 정보 따로 가져오기
-      if (groupInfo.value?.adminId) {
-        try {
-          const adminUser = await userStore.getUserProfile(groupInfo.value.adminId)
-          let adminProfileImage = null
-          if (adminUser.profileImageId) {
-            adminProfileImage = await userStore.getProfileImage(adminUser.profileImageId)
-          }
-          adminInfo.value = {
-            ...adminUser,
-            profileImage: adminProfileImage
-          }
-          console.log('관리자 정보 설정:', adminInfo.value)
-        } catch (error) {
-          console.error('관리자 정보 로드 실패:', error)
+// 멤버 관련 로직
+const fetchMembers = async () => {
+  try {
+    console.log('멤버 조회 시작, groupId:', groupId.value)
+    const membersList = await groupStore.getGroupMembers(groupId.value)
+    console.log('가져온 멤버 목록:', membersList)
+    
+    // 모든 멤버의 프로필 이미지 로드
+    members.value = await Promise.all(
+      membersList.map(async (member) => {
+        let profileImage = null
+        if (member.profileImageId) {
+          profileImage = await userStore.getProfileImage(member.profileImageId)
         }
-      }
+        return { ...member, profileImage }
+      })
+    )
 
-    } catch (error) {
-      console.error('멤버 목록 로드 실패:', error)
-    }
+  } catch (error) {
+    console.error('멤버 목록 로드 실패:', error)
   }
+}
   
   // 그룹 정보 가져오기
   const fetchGroupInfo = async () => {
@@ -305,6 +281,18 @@
   const goToAdminPage = () => {
     router.push(`/group-admin/${route.params.id}`)
   }
+
+  const confirmLeaveGroup = async () => {
+  if (window.confirm('정말 그룹에서 탈퇴하시겠습니까?')) {
+    try {
+      await groupStore.leaveGroup(groupId.value, userStore.user.id)
+      router.push('/mygroups')
+    } catch (error) {
+      console.error('그룹 탈퇴 실패:', error)
+      alert('그룹 탈퇴에 실패했습니다. 다시 시도해주세요.')
+    }
+  }
+}
   
   onMounted(async () => {
     await Promise.all([
