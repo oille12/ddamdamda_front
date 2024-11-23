@@ -238,6 +238,110 @@ export const useGroupStore = defineStore('group', {
       }
     },
 
+    async createGroupNotice(formData) {
+      try {
+        const response = await api.post('/groupnotice', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        })
+        return response.data
+      } catch (error) {
+        console.error('공지사항 생성 에러:', error)
+        throw error
+      }
+    },
+
+        // 공지사항 상세 조회
+    async getGroupNoticeDetail(gnoticeId) {
+      try {
+        const response = await api.get(`/groupnotice/${gnoticeId}`)
+        return response.data
+      } catch (error) {
+        console.error('공지사항 상세 조회 에러:', error)
+        throw error
+      }
+    },
+
+    // 공지사항 삭제
+    async deleteGroupNotice(gnoticeId) {
+      try {
+        const response = await api.delete(`/groupnotice/${gnoticeId}`)
+        return response.data
+      } catch (error) {
+        console.error('공지사항 삭제 에러:', error)
+        throw error
+      }
+    },
+
+    // 댓글 목록 조회
+    async getGroupNoticeComments(pageRequest) {
+      try {
+        const response = await api.post('/gcomment/page', pageRequest)
+        return response.data
+      } catch (error) {
+        console.error('댓글 목록 조회 에러:', error)
+        throw error
+      }
+    },
+
+    // 댓글 작성
+    async createComment(commentData) {
+      try {
+        const response = await api.post('/gcomment', commentData)
+        return response.data
+      } catch (error) {
+        console.error('댓글 작성 에러:', error)
+        throw error
+      }
+    },
+
+    // 댓글 수정
+    async updateComment(commentData) {
+      try {
+        const response = await api.put('/gcomment', commentData)
+        return response.data
+      } catch (error) {
+        console.error('댓글 수정 에러:', error)
+        throw error
+      }
+    },
+
+    // 댓글 삭제
+    async deleteComment(commentId) {
+      try {
+        const response = await api.delete(`/gcomment/${commentId}`)
+        return response.data
+      } catch (error) {
+        console.error('댓글 삭제 에러:', error)
+        throw error
+      }
+    },
+
+    // 공지사항 이미지 목록 조회
+    async getGnoticeImages(gnoticeId) {
+      try {
+        const response = await api.get(`/gnoticeimage/gnotice/${gnoticeId}`)
+        return response.data
+      } catch (error) {
+        console.error('공지사항 이미지 목록 조회 에러:', error)
+        throw error
+      }
+    },
+
+    // 이미지 URL 가져오기
+    async getGnoticeImageUrl(imageId) {
+      try {
+        const response = await api.get(`/gnoticeimage/${imageId}`, {
+          responseType: 'blob'
+        })
+        return URL.createObjectURL(response.data)
+      } catch (error) {
+        console.error('이미지 URL 생성 에러:', error)
+        throw error
+      }
+    },
+
     clearMyGroups() {
       this.myGroups = []
       this.loading = false

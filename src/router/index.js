@@ -12,6 +12,8 @@ import SignupView from '@/views/SignupView.vue'
 import DiaryView from '@/views/DiaryView.vue'
 import MyGroupView from '@/views/MyGroupView.vue'
 import MyGroupDetail from '@/components/group/my/MyGroupDetail.vue'
+import GroupNoticeWrite from '@/components/group/my/GroupNoticeWrite.vue'
+import GroupNoticeDetail from '@/components/group/my/GroupNoticeDetail.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -85,7 +87,20 @@ const router = createRouter({
       path: '/mygroups-detail/:groupId',
       name: 'MyGroupDetail',
       component: MyGroupDetail
-    }
+    },
+    {
+      path: '/group-notice-write/:groupId',
+      name: 'GroupNoticeWrite',
+      component: GroupNoticeWrite,
+      props: true
+    },
+    {
+      path: '/group-notice-detail/:gnoticeId',
+      name: 'GroupNoticeDetail',
+      component: GroupNoticeDetail,
+      props: true
+    },
+
   ]
 })
 
