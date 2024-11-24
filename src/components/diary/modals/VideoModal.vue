@@ -61,7 +61,6 @@ const emit = defineEmits(['close'])
 const videoUrl = ref('')
 const isLoading = ref(true)
 
-// onMounted 대신 watchEffect 사용
 watchEffect(async () => {
   if (props.exerciseTitle) {
     isLoading.value = true
@@ -71,7 +70,6 @@ watchEffect(async () => {
      
       if (exercise?.videoUrl) {
         videoUrl.value = exercise.videoUrl
-        // console.log('설정된 영상 URL:', videoUrl.value)
       }
     } catch (error) {
       console.error('운동 영상 데이터 로드 실패:', error)

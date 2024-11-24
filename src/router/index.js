@@ -16,15 +16,16 @@ import GroupNoticeWrite from '@/components/group/my/GroupNoticeWrite.vue'
 import GroupNoticeDetail from '@/components/group/my/GroupNoticeDetail.vue'
 import GroupNoticeEdit from '@/components/group/my/GroupNoticeEdit.vue'
 import MyGroupAdmin from '@/components/group/my/MyGroupAdmin.vue'
+import HomeView from '@/views/HomeView.vue'
 
 const router = createRouter({
   history: createWebHistory(),
   routes: [
-    // {
-    //   path: '/',
-    //   name: 'home',
-    //   component: HomeView
-    // },
+    {
+      path: '/',
+      name: 'home',
+      component: HomeView
+    },
     {
       path: '/board',
       name: 'board',
