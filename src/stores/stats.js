@@ -22,7 +22,6 @@ export const useStatsStore = defineStore('stats', {
     async getWeeklyProgress(selectedDate, userId) {
       try {
         this.isLoading = true
-        // console.log('주간 데이터 로드 시작:', { selectedDate, userId })
 
         const start = startOfWeek(selectedDate, { weekStartsOn: 1 })
         const end = endOfWeek(selectedDate, { weekStartsOn: 1 })
@@ -30,7 +29,7 @@ export const useStatsStore = defineStore('stats', {
         
         const progressData = await Promise.all(
             weekDays.map(async (date) => {
-              const formattedDate = format(date, 'yyyy-MM-dd')  // 정확한 날짜 형식 사용
+              const formattedDate = format(date, 'yyyy-MM-dd')
                   
               // 루틴 개수 조회
               const [totalCount, completedCount] = await Promise.all([
@@ -44,9 +43,17 @@ export const useStatsStore = defineStore('stats', {
               //   completed: completedCount
               // })
       
-              const progressRate = totalCount > 0 
-                ? Math.round((completedCount / totalCount) * 100)
-                : 0
+              // progressRate 계산 로직
+              let progressRate = 0
+              if (totalCount > 0) {
+                if (completedCount > 0) {
+                  // 완료된 루틴이 있는 경우 기존 계산 방식 사용
+                  progressRate = Math.round((completedCount / totalCount) * 100)
+                } else {
+                  // 등록은 했지만 완료된 루틴이 없는 경우
+                  progressRate = 10
+                }
+              }
       
               return {
                 date: format(date, 'EEE', { locale: ko }), // 요일 표시

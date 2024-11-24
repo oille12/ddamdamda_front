@@ -1,438 +1,478 @@
 <template>
-    <div class="min-h-screen">    
-        <main class="pt-14 mb-14" role="main">
-            <section class="pt-8">
-                <div class="max-w-6xl mx-auto px-2">
-                    <div class="flex items-center justify-between mb-10">
-                    <!-- Title -->
-                    <div class="space-y-4 flex-2 pr-8">
-                        <h1 class="text-6xl font-bold leading-tight text-gray-900">
-                        Track Your <span class="text-black bg-[#dcff1f] rounded-lg px-2">Health</span>
-                        </h1>
-                        <p class="text-gray-600">매일매일 성장하는 당신의 운동 기록을 관리하세요.</p>
-                    </div>
-
-                    <!-- Character Image -->
-                    <div class="flex items-center relative w-48 h-80">
-                        <div class="absolute top-12 -left-4 w-12 h-12 rounded-lg bg-gray-900"></div>
-                        <div class="relative character-bg rounded-lg p-3">
-                        <img src="@/assets/images/home_top.png" alt="Character" class="w-full h-full object-contain object-center max-w-[140px] mx-auto" />
-                        </div>
-                    </div>
-                    </div>
-
-                    <!-- Stats Grid -->
-                    <div class="grid md:grid-cols-3 gap-5 mb-5">
-                        <!-- Today's Workout -->
-                        <div class="stat-card p-5 bg-white shadow-lg hover:shadow-xl rounded-2xl">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                <h3 class="font-semibold text-base mb-1 text-gray-900">오늘의 운동 수행</h3>
-                                <div class="flex items-baseline gap-1">
-                                    <span class="text-2xl font-bold text-gray-900">
-                                    {{ todayProgress }}%
-                                    </span>
-                                    <!-- <span class="text-sm text-gray-500">&nbsp; 수행 완료율</span> -->
-                                </div>
-                                </div>
-                                <div class="w-10 h-10 rounded-lg flex items-center justify-center bg-gray-100">
-                                <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Monthly Workout -->
-                        <div class="stat-card p-4 bg-white shadow-lg hover:shadow-xl rounded-2xl">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <h3 class="font-semibold text-base mb-1 text-gray-900">월간 운동</h3>
-                                    <div class="flex items-baseline gap-1">
-                                    <span class="text-2xl font-bold text-gray-900">{{ monthlyWorkoutDays }}</span>
-                                    <span class="text-gray-500">일</span>
-                                    </div>
-                                </div>
-                                <div class="w-10 h-10 rounded-lg flex items-center justify-center bg-gray-100">
-                                    <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                    </svg>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Weekly Workout -->
-                        <div class="stat-card p-4 bg-white shadow-lg hover:shadow-xl rounded-2xl">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <h3 class="font-semibold text-base mb-1 text-gray-900">주간 운동</h3>
-                                    <div class="flex items-baseline gap-1">
-                                        <span class="text-2xl font-bold text-gray-900">
-                                        {{ weeklyWorkoutDays }}
-                                        </span>
-                                        <span class="text-lg text-gray-400">/ 7</span>
-                                        <span class="text-gray-500">회</span>
-                                    </div>
-                                </div>
-                                <div class="w-10 h-10 rounded-lg flex items-center justify-center bg-gray-100">
-                                    <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                                    </svg>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                </div>
-            </section>
-
-            <!-- Charts Section -->
-            <div class="grid grid-cols-2 gap-5 max-w-6xl mx-auto px-2">
-                <!-- Weekly Progress Chart -->
-                <div class="stat-card p-5 bg-black rounded-2xl">
-                    <WeeklyProgress 
-                        v-if="isAuthenticated && weeklyChartData"
-                        :weekly-data="weeklyChartData"
-                        :full-width="false"
-                        class="h-36"
-                    />
-                    <div 
-                        v-else 
-                        class="stat-card p-5 bg-black rounded-2xl flex items-center justify-center text-gray-400"
-                    >
-                      로그인 후 확인 가능합니다
-                    </div>
-                    </div>
-
-                <!-- Exercise Parts Distribution -->
-                <div class="stat-card bg-black p-4 shadow-lg rounded-2xl">
-                  <div class="flex items-center justify-between mb-2 p-4">
-                    <h3 class="text-sm font-medium text-white">운동 부위 현황</h3>
-                    <div class="px-2 py-1 rounded-full text-xs font-medium text-black" 
-                        style="background-color: #dcff1f;">
-                      Distribution
-                    </div>
-                  </div>
-                                    
-                  <div v-if="isLoading" class="h-24 flex items-center justify-center">
-                    <svg class="animate-spin h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
-                    </svg>
-                    <span>분석 중...</span>
-                  </div>
-                    
-                  <div v-else-if="!isAuthenticated" class="h-36 flex items-center justify-center text-gray-400">
-                    로그인 후 확인 가능합니다
-                  </div>
-                  
-                  <div v-else-if="partStats.length === 0" class="h-36 flex items-center justify-center text-gray-400">
-                    운동 기록이 없습니다
-                  </div>
-                  
-                  <div v-else class="space-y-2 px-4">
-                    <div class="flex items-center space-x-2">
-                        <svg class="w-5 h-5 text-[#dcff1f]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                            d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                        </svg>
-                        <span class="text-2xl font-semibold stat-value text-[#dcff1f]">
-                          {{ partStats.slice(0, 3).map(stat => stat.part).join(' , ') }}
-                        </span>
-                    </div>
-                    <p class="text-sm text-gray-400">이번 달 가장 많이 운동한 부위입니다</p>
-                    </div>
-                </div>
+  <div class="min-h-screen">    
+    <main class="pt-14 mb-14" role="main">
+      <!-- Title Section -->
+      <section class="pt-8">
+        <div class="max-w-6xl mx-auto px-2">
+          <div class="flex items-center justify-between mb-10">
+            <!-- Title -->
+            <div class="space-y-4 flex-2 pr-8">
+              <h1 class="text-6xl font-bold leading-tight text-gray-900">
+                Track Your <span class="text-black bg-[#dcff1f] rounded-lg px-2">Health</span>
+              </h1>
+              <p class="text-gray-600">매일매일 성장하는 당신의 운동 기록을 관리하세요.</p>
             </div>
-        </main>
 
-        <!-- Diary Section -->
-        <div class="grid md:grid-cols-2 gap-5 mt-5 mb-16 max-w-6xl mx-auto px-2">
-        <!-- Monthly Calendar -->
-        <div class="stat-card p-5 bg-white shadow-lg hover:shadow-xl rounded-2xl">
-        <div class="flex items-center justify-between mb-3">
-            <h3 class="font-semibold text-base text-gray-900">월간 다이어리</h3>
-            <router-link 
-            to="/diary" 
-            class="text-sm text-gray-500 hover:text-gray-700"
-            >
-            다이어리로 이동
-            </router-link>
-        </div>
-
-        <div class="bg-gray-50 rounded-lg">
-            <DiaryCalendar
-            v-if="isAuthenticated"
-            :current-year="currentYear"
-            :current-month="currentMonth"
-            :selected-date="selectedDate"
-            :routines="routines"
-            @previous-month="previousMonth"
-            @next-month="nextMonth"
-            @select-date="selectDate"
-            />
-            <div 
-            v-else 
-            class="h-48 flex items-center justify-center text-gray-500"
-            >
-            로그인 후 확인 가능합니다
+            <!-- Character Image -->
+            <div class="flex items-center relative w-48 h-80">
+              <div class="absolute top-12 -left-4 w-12 h-12 rounded-lg bg-gray-900"></div>
+              <div class="relative character-bg rounded-lg p-3">
+                <img src="@/assets/images/home_top.png" alt="Character" class="w-full h-full object-contain object-center max-w-[140px] mx-auto" />
+              </div>
             </div>
-        </div>
-        </div>
+          </div>
 
-        <!-- Selected Date Routines -->
-        <DiaryRoutines
-        v-if="isAuthenticated"
-        :selected-date="selectedDate"
-        :current-date="currentDate"
-        :routines="routines"
-        @show-routine-modal="showRoutineModal = true"
-        @show-ai-modal="showAiModal = true"
-        @show-set-count-modal="handleShowSetCountModal"
-        @show-video="handleShowVideo"
-        @update-routine="updateRoutine"
-        @delete-routine="deleteRoutine"
-        @update-routine-status="handleRoutineStatusUpdate"
-        />
-        <div 
-        v-else 
-        class="stat-card p-5 bg-white shadow-lg hover:shadow-xl rounded-2xl flex items-center justify-center text-gray-500"
-        >
-        로그인 후 확인 가능합니다
-        </div>
-    </div>
-
-    <!-- Modals -->
-    <RoutineModal 
-        v-if="showRoutineModal"
-        :categories="categories"
-        :exercises="exercisesList"
-        :selected-date="new Date(currentYear, currentMonth - 1, selectedDate)"
-        @close="showRoutineModal = false"
-        @add-routines="handleAddRoutines"
-    />
-
-    <SetCountModal
-        v-if="showSetCountModal"
-        :exercise-title="editingRoutine?.title"
-        :initial-sets="editingRoutine?.sets"
-        :initial-reps="editingRoutine?.reps"
-        :is-edit="true"
-        @close="showSetCountModal = false"
-        @confirm="handleSetCountConfirm"
-    />
-
-    <AiRoutineModal
-        v-if="showAiModal"
-        @close="handleCloseAiModal"
-        :current-step="1"
-        :selected-date="new Date(currentYear, currentMonth-1, selectedDate)"
-        @routines-saved="handleRoutinesSaved"
-    />
-        
-    <VideoModal
-        v-if="selectedVideo"
-        :exercise-title="selectedExerciseTitle"
-        @close="closeVideoModal"
-    />
-
-    <!-- Recommended Videos Section -->
-    <div class="mb-16 col-span-2 max-w-6xl mx-auto px-2">
-        <!-- Section Header -->
-        <div class="flex items-center justify-between mb-3">
-        <h2 class="font-bold text-3xl text-gray-900 mb-6">추천 운동 영상</h2>
-        
-        <!-- Category Filter -->
-        <div class="flex gap-2">
-            <button
-            v-for="category in categories"
-            :key="category.id"
-            @click="handleCategoryChange(category.id)"
-            class="px-4 py-2 rounded-full text-sm"
-            :class="selectedCategory === category.id 
-                ? 'bg-black text-[#dcff1f]' 
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
-            >
-            {{ category.title }}
-            </button>
-        </div>
-        </div>
-
-        <!-- Loading State -->
-        <div 
-        v-if="videoStore.loading"
-        class="grid md:grid-cols-3 gap-5"
-        >
-        <div 
-            v-for="n in 6" 
-            :key="n"
-            class="animate-pulse bg-gray-200 rounded-2xl h-64"
-        ></div>
-        </div>
-
-        <!-- Error State -->
-        <div 
-        v-else-if="videoStore.error"
-        class="text-center py-10 text-gray-500"
-        >
-        영상을 불러오는데 실패했습니다.
-        </div>
-
-        <!-- Empty State -->
-        <div 
-        v-else-if="videoStore.videos.length === 0"
-        class="text-center py-10 text-gray-500"
-        >
-        등록된 영상이 없습니다.
-        </div>
-
-        <!-- Videos Grid -->
-        <div 
-          v-else
-          class="grid md:grid-cols-3 gap-5"
-        >
-          <div 
-            v-for="video in limitedVideos" 
-            :key="video.id"
-            class="stat-card bg-white shadow-lg hover:shadow-xl overflow-hidden rounded-2xl cursor-pointer "
-            @click="handleShowVideo(video)"
-          >
-            <!-- Video -->
-            <div class="relative w-full aspect-video">
-              <iframe 
-                :src="video.videoUrl" 
-                frameborder="0"
-                class="absolute inset-0 w-full h-full"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowfullscreen
-              ></iframe>
-              <div class="absolute inset-0 flex items-center justify-center bg-black/20 hover:opacity-100 transition-opacity">
-                  
+          <!-- Stats Grid -->
+          <div class="grid md:grid-cols-3 gap-5 mb-5">
+            <!-- Today's Workout -->
+            <div class="stat-card p-5 bg-white shadow-lg hover:shadow-xl rounded-2xl">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h3 class="font-semibold text-base mb-1 text-gray-900">오늘의 운동 수행</h3>
+                  <div class="flex items-baseline gap-1">
+                    <span class="text-2xl font-bold text-gray-900">
+                      {{ todayProgress }}%
+                    </span>
+                  </div>
+                </div>
+                <div class="w-10 h-10 rounded-lg flex items-center justify-center bg-gray-100">
+                  <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
               </div>
             </div>
 
-            <!-- Video Info -->
-            <div class="p-6 flex items-center justify-between">
-            <h4 class="font-medium text-gray-900 mb-1">{{ video.title }}</h4>
-            <span class="px-3 py-1 text-xs bg-gray-100 rounded-full text-gray-600">
-              {{ video.description }}
-            </span>
+            <!-- Monthly Workout -->
+            <div class="stat-card p-4 bg-white shadow-lg hover:shadow-xl rounded-2xl">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h3 class="font-semibold text-base mb-1 text-gray-900">월간 운동</h3>
+                  <div class="flex items-baseline gap-1">
+                    <span class="text-2xl font-bold text-gray-900">{{ monthlyWorkoutDays }}</span>
+                    <span class="text-gray-500">일</span>
+                  </div>
+                </div>
+                <div class="w-10 h-10 rounded-lg flex items-center justify-center bg-gray-100">
+                  <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <!-- Weekly Workout -->
+            <div class="stat-card p-4 bg-white shadow-lg hover:shadow-xl rounded-2xl">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h3 class="font-semibold text-base mb-1 text-gray-900">주간 운동</h3>
+                  <div class="flex items-baseline gap-1">
+                    <span class="text-2xl font-bold text-gray-900">
+                      {{ weeklyWorkoutDays }}
+                    </span>
+                    <span class="text-lg text-gray-400">/ 7</span>
+                    <span class="text-gray-500">회</span>
+                  </div>
+                </div>
+                <div class="w-10 h-10 rounded-lg flex items-center justify-center bg-gray-100">
+                  <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                  </svg>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-    </div>
+      </section>
 
-    <VideoModal
-        v-if="showVideoModal"
-        :exercise-title="selectedExerciseTitle"
-        @close="closeVideoModal"
-      />
-    
-    <!-- Group & Board Section -->
-    <div class="mb-28 max-w-6xl mx-auto px-2">
-      <!-- Section Header -->
-      <h2 class="font-bold text-3xl text-gray-900 mb-6">커뮤니티</h2>
-
-      <!-- Grid Layout -->
-      <div class="grid md:grid-cols-2 gap-5">
-        <!-- Recent Group Posts -->
-        <div class="stat-card p-5 bg-white shadow-lg hover:shadow-xl rounded-2xl">
-        <div class="flex items-center justify-between mb-3">
-            <h3 class="font-semibold text-base text-gray-900">최근 그룹 메이트 모집글</h3>
-            <router-link 
-            to="/group" 
-            class="text-sm text-gray-500 hover:text-gray-700"
-            >
-            더보기
-            </router-link>
-        </div>
-
-        <div class="space-y-3">
-            <div 
-            v-if="groups.length === 0" 
-            class="p-3 bg-gray-50 rounded-lg text-center text-gray-500"
-            >
-            등록된 모집글이 없습니다
-            </div>
-
-            <div 
-              v-for="group in groups" 
-              :key="group.id"
-              class="p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
-              @click="router.push(`/group`)"
-            >
-            <div class="flex items-center gap-3 mb-2">
-                <img 
-                :src="group.imageUrl" 
-                :alt="group.groupName"
-                class="w-8 h-8 rounded-full object-cover"
-                >
-                <div>
-                <div class="font-medium">{{ group.groupName }}</div>
-                <div class="text-sm text-gray-500">{{ group.region }}</div>
+      <!-- Charts Section -->
+      <section class="mb-16">
+        <div class="grid grid-cols-2 gap-5 max-w-6xl mx-auto px-2">
+          <!-- Weekly Progress Chart -->
+          <div class="contents">
+            <div class="relative">
+              <WeeklyProgress 
+                :weekly-data="chartData"
+                :full-width="false"
+                class="h-full"
+              />
+              <!-- 비로그인시 오버레이 -->
+              <div 
+                v-if="!userStore.isAuthenticated" 
+                class="absolute inset-0 bg-black/60 rounded-2xl flex items-center justify-center"
+              >
+                <div class="text-center text-white">
+                  <p class="mb-3">로그인하고 운동 기록을 시작해보세요</p>
+                  <router-link 
+                    to="/login" 
+                    class="inline-block px-4 py-2 bg-[#dcff1f] text-black rounded-full text-sm hover:bg-[#c5e619] transition-colors"
+                  >
+                    시작하기
+                  </router-link>
                 </div>
+              </div>
             </div>
+          </div>
+
+          <!-- Exercise Parts Distribution -->
+          <div class="stat-card p-5 rounded-2xl bg-black relative">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="font-semibold text-base text-white">운동 부위 현황</h3>
+              <span class="px-3 py-1 rounded-full text-xs font-medium text-black" style="background-color: #dcff1f;">
+                Distribution
+              </span>
+            </div>
+            
+            <div class="space-y-2">
+              <div 
+                v-for="(stat, index) in partsData" 
+                :key="stat.part" 
+                class="flex items-center space-x-2"
+              >
+                <span class="text-[#dcff1f] flex items-center gap-2">
+                  <span class="text-xs font-sm text-gray-200 bg-gray-800 px-2 py-0.5 rounded-full">
+                    {{ ['Top 1', 'Top 2', 'Top 3'][index] }}
+                  </span>
+                  {{ stat.part }}
+                </span>
+                <div class="flex-1 bg-gray-800 h-2 rounded-full">
+                  <div 
+                    class="h-full bg-[#dcff1f] rounded-full" 
+                    :style="{ width: `${stat.percentage}%` }"
+                  ></div>
+                </div>
+                <span class="text-white text-sm">{{ stat.percentage }}%</span>
+              </div>
+            </div>
+
+            <!-- 비로그인시 오버레이 -->
+            <div 
+              v-if="!userStore.isAuthenticated" 
+              class="absolute inset-0 bg-black/60 rounded-2xl flex items-center justify-center"
+            >
+              <div class="text-center text-white">
+                <p class="mb-3">로그인하고 운동 통계를 확인해보세요</p>
+                <router-link 
+                  to="/login" 
+                  class="inline-block px-4 py-2 bg-[#dcff1f] text-black rounded-full text-sm hover:bg-[#c5e619] transition-colors"
+                >
+                  시작하기
+                </router-link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Diary Section -->
+      <section class="mb-16">
+        <div class="grid md:grid-cols-2 gap-5 max-w-6xl mx-auto px-2">
+          <!-- Monthly Calendar -->
+          <div class="stat-card p-5 bg-white shadow-lg hover:shadow-xl rounded-2xl relative">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="font-semibold text-base text-gray-900">월간 다이어리</h3>
+              <router-link 
+                to="/diary" 
+                class="text-sm text-gray-500 hover:text-gray-700"
+              >
+                다이어리로 이동
+              </router-link>
+            </div>
+
+            <div class="bg-gray-50 rounded-lg">
+              <DiaryCalendar
+                :current-year="currentYear"
+                :current-month="currentMonth"
+                :selected-date="selectedDate"
+                :routines="userStore.isAuthenticated ? routines : demoData.demoRoutines"
+                @previous-month="previousMonth"
+                @next-month="nextMonth"
+                @select-date="selectDate"
+              />
+            </div>
+
+            <!-- 비로그인시 오버레이 -->
+            <div 
+              v-if="!userStore.isAuthenticated" 
+              class="absolute inset-0 bg-black/40 flex items-center justify-center rounded-2xl"
+            >
+              <div class="text-center">
+                <p class="text-white mb-4" style="text-shadow: 1px 6px 20px #4d4d4d;">운동 계획을 체계적으로 관리하세요</p>
+                <router-link 
+                  to="/login" 
+                  class="inline-block px-4 py-2 bg-[#dcff1f] text-black rounded-full text-sm hover:bg-[#c5e619] transition-colors"
+                >
+                  다이어리 시작하기
+                </router-link>
+              </div>
+            </div>
+          </div>
+
+          <!-- Selected Date Routines -->
+          <div class="stat-card p-5 bg-white shadow-lg hover:shadow-xl rounded-2xl relative">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="font-semibold text-base text-gray-900">오늘의 루틴</h3>
+              <span class="text-sm text-gray-500">{{ format(new Date(), 'yyyy.MM.dd') }}</span>
+            </div>
+
+            <DiaryRoutines
+              :selected-date="selectedDate"
+              :current-date="currentDate"
+              :routines="userStore.isAuthenticated ? routines : demoData.demoRoutines"
+              @show-routine-modal="showRoutineModal = true"
+              @show-ai-modal="showAiModal = true"
+              @show-set-count-modal="handleShowSetCountModal"
+              @show-video="handleShowVideo"
+              @update-routine="updateRoutine"
+              @delete-routine="deleteRoutine"
+              @update-routine-status="handleRoutineStatusUpdate"
+            />
+
+            <!-- 비로그인시 오버레이 -->
+            <div 
+              v-if="!userStore.isAuthenticated" 
+              class="absolute inset-0 bg-black/40 flex items-center justify-center rounded-2xl z-10"
+            >
+              <div class="text-center">
+                <p class="text-white mb-4" style="text-shadow: 1px 6px 20px #4d4d4d;">AI가 추천하는 맞춤 루틴을 받아보세요</p>
+                <router-link 
+                  to="/login" 
+                  class="inline-block px-4 py-2 bg-[#dcff1f] text-black rounded-full text-sm hover:bg-[#c5e619] transition-colors"
+                >
+                  루틴 시작하기
+                </router-link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Recommended Videos Section -->
+      <section class="mb-16">
+        <div class="max-w-6xl mx-auto px-2">
+          <!-- Section Header -->
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="font-bold text-3xl text-gray-900 mb-6">추천 운동 영상</h2>
+            
+            <!-- Category Filter -->
             <div class="flex gap-2">
-                <span 
-                class="px-2 py-0.5 text-xs rounded-full"
-                :class="group.mateStatus === '모집중' 
-                    ? 'bg-[#dcff1f] text-black' 
-                    : 'bg-gray-200 text-gray-600'"
-                >
-                {{ group.mateStatus }}
-                </span>
-                <span class="text-xs text-gray-500">
-                {{ group.memberCount - group.currentMembers }}명 모집
-                </span>
+              <button
+                v-for="category in categories"
+                :key="category.id"
+                @click="handleCategoryChange(category.id)"
+                class="px-4 py-2 rounded-full text-sm"
+                :class="selectedCategory === category.id 
+                  ? 'bg-black text-[#dcff1f]' 
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
+              >
+                {{ category.title }}
+              </button>
             </div>
-            </div>
-        </div>
-        </div>
+          </div>
 
-        <!-- Popular Board Posts -->
-        <div class="stat-card p-5 bg-white shadow-lg hover:shadow-xl rounded-2xl">
-        <div class="flex items-center justify-between mb-3">
-            <h3 class="font-semibold text-base text-gray-900">인기 게시글</h3>
-            <router-link 
-            to="/board" 
-            class="text-sm text-gray-500 hover:text-gray-700"
-            >
-            더보기
-            </router-link>
-        </div>
-
-        <div class="space-y-3">
+          <!-- Videos Grid -->
+          <div 
+            v-if="videoStore.loading"
+            class="grid md:grid-cols-3 gap-5"
+          >
             <div 
-            v-if="popularPosts.length === 0" 
-            class="p-3 bg-gray-50 rounded-lg text-center text-gray-500"
-            >
-            등록된 게시글이 없습니다
-            </div>
+              v-for="n in 6" 
+              :key="n"
+              class="animate-pulse bg-gray-200 rounded-2xl h-64"
+            ></div>
+          </div>
 
+          <div 
+            v-else-if="videoStore.error"
+            class="text-center py-10 text-gray-500"
+          >
+            영상을 불러오는데 실패했습니다.
+          </div>
+
+          <div 
+            v-else-if="videoStore.videos.length === 0"
+            class="text-center py-10 text-gray-500"
+          >
+            등록된 영상이 없습니다.
+          </div>
+
+          <div 
+            v-else
+            class="grid md:grid-cols-3 gap-5"
+          >
             <div 
-            v-for="post in popularPosts" 
-            :key="post.id"
-            class="p-3 bg-gray-50 rounded-lg flex justify-between items-center cursor-pointer hover:bg-gray-100"
-            @click="router.push(`/board/${post.id}`)"
+              v-for="video in limitedVideos" 
+              :key="video.id"
+              class="stat-card bg-white shadow-lg hover:shadow-xl overflow-hidden rounded-2xl cursor-pointer"
+              @click="handleShowVideo(video)"
             >
-            <div>
-                <div class="font-medium">{{ post.title }}</div>
-                <div class="text-sm text-gray-500">
-                조회수 {{ post.viewCount }} · 댓글 {{ post.commentsCount }}
+              <!-- Video -->
+              <div class="relative w-full aspect-video">
+                <iframe 
+                  :src="video.videoUrl" 
+                  frameborder="0"
+                  class="absolute inset-0 w-full h-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowfullscreen
+                ></iframe>
+                <div class="absolute inset-0 flex items-center justify-center bg-black/20 hover:opacity-100 transition-opacity">
                 </div>
+              </div>
+
+              <!-- Video Info -->
+              <div class="p-6 flex items-center justify-between">
+                <h4 class="font-medium text-gray-900 mb-1">{{ video.title }}</h4>
+                <span class="px-3 py-1 text-xs bg-gray-100 rounded-full text-gray-600">
+                  {{ video.description }}
+                </span>
+              </div>
             </div>
-            <img 
-                v-if="post.thumbnail"
-                :src="post.thumbnail" 
-                :alt="post.title"
-                class="w-12 h-12 rounded-lg object-cover"
-            >
+          </div>
+        </div>
+      </section>
+
+      <!-- Group & Board Section -->
+      <section class="mb-28">
+        <div class="max-w-6xl mx-auto px-2">
+          <!-- Section Header -->
+          <h2 class="font-bold text-3xl text-gray-900 mb-6">커뮤니티</h2>
+
+          <!-- Grid Layout -->
+          <div class="grid md:grid-cols-2 gap-5">
+            <!-- Recent Group Posts -->
+            <div class="stat-card p-5 bg-white shadow-lg hover:shadow-xl rounded-2xl">
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="font-semibold text-base text-gray-900">최근 그룹 메이트 모집글</h3>
+                <router-link 
+                  to="/group" 
+                  class="text-sm text-gray-500 hover:text-gray-700"
+                >
+                  더보기
+                </router-link>
+              </div>
+
+              <div class="space-y-3">
+                <div 
+                  v-if="groups.length === 0" 
+                  class="p-3 bg-gray-50 rounded-lg text-center text-gray-500"
+                >
+                  등록된 모집글이 없습니다
+                </div>
+
+                <div 
+                  v-for="group in groups" 
+                  :key="group.id"
+                  class="p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
+                  @click="router.push(`/group`)"
+                >
+                  <div class="flex items-center gap-3 mb-2">
+                    <img 
+                      :src="group.imageUrl" 
+                      :alt="group.groupName"
+                      class="w-8 h-8 rounded-full object-cover"
+                    >
+                    <div>
+                      <div class="font-medium">{{ group.groupName }}</div>
+                      <div class="text-sm text-gray-500">{{ group.region }}</div>
+                    </div>
+                  </div>
+                  <div class="flex gap-2">
+                    <span 
+                      class="px-2 py-0.5 text-xs rounded-full"
+                      :class="group.mateStatus === '모집중' 
+                        ? 'bg-[#dcff1f] text-black' 
+                        : 'bg-gray-200 text-gray-600'"
+                    >
+                      {{ group.mateStatus }}
+                    </span>
+                    <span class="text-xs text-gray-500">
+                      {{ group.memberCount - group.currentMembers }}명 모집
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
+
+            <!-- Popular Board Posts -->
+            <div class="stat-card p-5 bg-white shadow-lg hover:shadow-xl rounded-2xl">
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="font-semibold text-base text-gray-900">인기 게시글</h3>
+                <router-link 
+                  to="/board" 
+                  class="text-sm text-gray-500 hover:text-gray-700"
+                >
+                  더보기
+                </router-link>
+              </div>
+
+              <div class="space-y-3">
+                <div 
+                  v-if="popularPosts.length === 0" 
+                  class="p-3 bg-gray-50 rounded-lg text-center text-gray-500"
+                >
+                  등록된 게시글이 없습니다
+                </div>
+
+                <div 
+                  v-for="post in popularPosts" 
+                  :key="post.id"
+                  class="p-3 bg-gray-50 rounded-lg flex justify-between items-center cursor-pointer hover:bg-gray-100"
+                  @click="router.push(`/board/${post.id}`)"
+                >
+                  <div>
+                    <div class="font-medium">{{ post.title }}</div>
+                    <div class="text-sm text-gray-500">
+                      조회수 {{ post.viewCount }} · 댓글 {{ post.commentsCount }}
+                    </div>
+                  </div>
+                  <img 
+                    v-if="post.thumbnail"
+                    :src="post.thumbnail" 
+                    :alt="post.title"
+                    class="w-12 h-12 rounded-lg object-cover"
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        </div>
-    </div>
-    </div>
-    </div>
+      </section>
+    </main>
+
+    <!-- Modals -->
+    <RoutineModal 
+      v-if="showRoutineModal"
+      :categories="categories"
+      :exercises="exercisesList"
+      :selected-date="new Date(currentYear, currentMonth - 1, selectedDate)"
+      @close="showRoutineModal = false"
+      @add-routines="handleAddRoutines"
+    />
+
+    <SetCountModal
+      v-if="showSetCountModal"
+      :exercise-title="editingRoutine?.title"
+      :initial-sets="editingRoutine?.sets"
+      :initial-reps="editingRoutine?.reps"
+      :is-edit="true"
+      @close="showSetCountModal = false"
+      @confirm="handleSetCountConfirm"
+    />
+
+    <AiRoutineModal
+      v-if="showAiModal"
+      @close="handleCloseAiModal"
+      :current-step="1"
+      :selected-date="new Date(currentYear, currentMonth-1, selectedDate)"
+      @routines-saved="handleRoutinesSaved"
+    />
+        
+    <VideoModal
+      v-if="showVideoModal"
+      :exercise-title="selectedExerciseTitle"
+      @close="closeVideoModal"
+    />
+  </div>
 </template>
 
 <script setup>
@@ -567,22 +607,26 @@ const handleCategoryChange = async (categoryId) => {
 const aiRoutineStore = useAiRoutineStore()
 
 const todayProgress = computed(() => {
-  if (!statsStore.weeklyProgress.length) return 0
-
-  const today = new Date().toLocaleDateString('ko-KR', { weekday: 'short' })
-  const todayData = statsStore.weeklyProgress.find(day => day.date === today)
-  return todayData?.progressRate || 0
+  if (userStore.isAuthenticated) {
+    const today = new Date().toLocaleDateString('ko-KR', { weekday: 'short' })
+    const todayData = statsStore.weeklyProgress.find(day => day.date === today)
+    return todayData?.progressRate || 0
+  }
+  return demoData.stats.todayProgress
 })
 
 const monthlyWorkoutDays = computed(() => {
-  return statsStore.monthlyStats.workoutDays || 0
+  if (userStore.isAuthenticated) {
+    return statsStore.monthlyStats.workoutDays || 0
+  }
+  return demoData.stats.monthlyWorkoutDays
 })
 
 const weeklyWorkoutDays = computed(() => {
-  if (!statsStore.weeklyProgress.length) return 0
-
-  // progressRate가 0보다 큰 날짜의 수를 계산
-  return statsStore.weeklyProgress.filter(day => day.progressRate > 0).length
+  if (userStore.isAuthenticated) {
+    return statsStore.weeklyProgress.filter(day => day.progressRate > 0).length
+  }
+  return demoData.stats.weeklyWorkoutDays
 })
 
 const closeMenus = (e) => {
@@ -898,6 +942,102 @@ const loadAuthenticatedData = async () => {
     console.error('인증 데이터 로드 실패:', error)
   }
 }
+
+const demoData = {
+  // 주간 운동 현황 데모 데이터
+  weeklyProgress: {
+    labels: ['월', '화', '수', '목', '금', '토', '일'],
+    datasets: [{
+      data: [80, 65, 100, 0, 75, 90, 45],
+      backgroundColor: '#dcff1f',
+      borderRadius: 4
+    }]
+  },
+
+  // 운동 부위 현황 데모 데이터
+  exerciseParts: [
+    { part: '가슴', percentage: 35 },
+    { part: '등', percentage: 30 },
+    { part: '어깨', percentage: 20 }
+  ],
+
+  // 운동 기록 데모 데이터
+  routineDemo: {
+    totalRoutines: 12,
+    completedRoutines: 9,
+    weeklyWorkoutDays: 5,
+    monthlyWorkoutDays: 18
+  },
+
+  // 통계 관련 데모 데이터
+  stats: {
+    todayProgress: 75,
+    monthlyWorkoutDays: 18,
+    weeklyWorkoutDays: 5
+  },
+
+  // 월간 다이어리 더미 데이터
+  demoRoutines: [
+    { 
+      id: 1,
+      exerciseDate: format(new Date(), 'yyyy-MM-dd'),
+      isCompleted: 1,
+      title: '벤치프레스',
+      sets: 3,
+      reps: 12
+    },
+    {
+      id: 2,
+      exerciseDate: format(new Date(), 'yyyy-MM-dd'),
+      isCompleted: 0,
+      title: '덤벨 숄더프레스',
+      sets: 4,
+      reps: 10
+    },
+    {
+      id: 3,
+      exerciseDate: format(new Date(), 'yyyy-MM-dd'),
+      isCompleted: 0,
+      title: '케이블 푸쉬다운',
+      sets: 3,
+      reps: 15
+    }
+  ],
+
+}
+
+// Charts Section을 위한 computed 속성
+const chartData = computed(() => {
+  if (userStore.isAuthenticated) {
+    if (!statsStore.weeklyProgress.length) {
+      return {
+        labels: [],
+        datasets: [{
+          data: [],
+          backgroundColor: '#dcff1f',
+          borderRadius: 4
+        }]
+      }
+    }
+    return {
+      labels: statsStore.weeklyProgress.map(d => d.date),
+      datasets: [{
+        data: statsStore.weeklyProgress.map(d => d.progressRate),
+        backgroundColor: '#dcff1f',
+        borderRadius: 4
+      }]
+    }
+  }
+  return demoData.weeklyProgress
+})
+
+const partsData = computed(() => {
+  if (userStore.isAuthenticated) {
+    if (!partStats.value) return []
+    return partStats.value?.slice(0, 3) || []
+  }
+  return demoData.exerciseParts.slice(0, 3)
+})
 
 onMounted(async () => {
     await loadInitialData()
