@@ -68,7 +68,7 @@
       router.push('/')  // 로그인 성공 시 홈으로 이동
     } catch (error) {
       console.error('Login failed:', error)
-      alert('로그인에 실패했습니다.')
+      alert('등록되지 않은 아이디이거나 아이디 또는 비밀번호를 잘못 입력했습니다.')
     }
   }
   </script>

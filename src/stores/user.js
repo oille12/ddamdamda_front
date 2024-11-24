@@ -153,14 +153,27 @@ export const useUserStore = defineStore('user', {
   // 닉네임 중복 체크
   async checkUsernameAvailable(username) {
     try {
-      const response = await api.get(`/user/vaildname/${username}`)
-      return true
+      const response = await api.get(`/user/vaildname/${username}`);
+      return response.data.message === 'success';  // success면 true 반환
     } catch (error) {
-      if(error.response?.state === 409) {
-        return false
+      if (error.response?.status === 409) {  // CONFLICT
+        return false;  // 이미 존재하는 닉네임
       }
-      console.error('닉네임 중복 체크 실패:', error)
-      throw error
+      console.error('닉네임 중복 체크 실패:', error);
+      throw error;
+    }
+  },
+
+  async checkEmailAvailable(email) {
+    try {
+      const response = await api.get(`/user/vaildemail/${email}`);  // vaildemail로 수정
+      return response.data.message === 'success';  // success면 true 반환
+    } catch (error) {
+      if (error.response?.status === 409) {  // CONFLICT
+        return false;  // 이미 존재하는 이메일
+      }
+      console.error('이메일 중복 체크 실패:', error);
+      throw error;
     }
   },
 
@@ -223,6 +236,18 @@ export const useUserStore = defineStore('user', {
     } catch (error) {
       console.error('회원가입 에러:', error)
       throw error
+    }
+  },
+  async verifyPassword(password) {
+    try {
+      const response = await api.post('/user/validpassword', {
+        id: this.userProfile.id,
+        password: password
+      });
+      return response.data; // true/false 반환
+    } catch (error) {
+      console.error('비밀번호 확인 실패:', error);
+      throw error;
     }
   }
  }
