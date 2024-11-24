@@ -65,6 +65,17 @@ const handleEditClick = (routine) => {
   showSetCountModal.value = true
 }
 
+// 날짜 확인 (미래 접근불가 목적)
+const isFutureDate = (dateString) => {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  const routineDate = new Date(dateString)
+  routineDate.setHours(0, 0, 0, 0)
+
+  return routineDate > today
+}
+
 // 세트, 횟수 수정 확인
 const handleSetCountConfirm = (setCount) => {
   if(editingRoutine.value) {
@@ -79,18 +90,7 @@ const handleSetCountConfirm = (setCount) => {
 }
 
 const completeRoutine = async(routine) => {
-  if(routine.isCompleted === 1) {
-    return false
-  }
-
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-
-  const routineDate = new Date(routine.exerciseDate)
-  routineDate.setHours(0, 0, 0, 0)
-
-  if(routineDate > today) {
-    alert('미래 날짜의 루틴은 완료 처리할 수 없습니다.')
+  if(routine.isCompleted === 1 || isFutureDate(routine.exerciseDate)) {
     return false
   }
 
@@ -169,7 +169,7 @@ const completeRoutine = async(routine) => {
               type="checkbox" 
               class="w-5 h-5 rounded text-black focus:ring-black"
               :checked="routine.isCompleted === 1"
-              :disabled="routine.isCompleted === 1"
+              :disabled="routine.isCompleted === 1 || isFutureDate(routine.exerciseDate)"
               @change="completeRoutine(routine)"
             >
             <div>
