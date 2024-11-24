@@ -103,6 +103,42 @@
                 수정하기
               </button>
             </div>
+
+            <!-- 비밀번호 확인 모달을 버튼 밖으로 이동 -->
+            <div v-if="showPasswordConfirmDialog" 
+                class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div class="bg-white rounded-lg p-6 w-96 shadow-xl">
+                <div class="mb-4">
+                  <h3 class="text-lg font-medium text-gray-900">회원 탈퇴</h3>
+                  <p class="text-sm text-gray-500 mt-1">회원 탈퇴를 위해 현재 비밀번호를 입력해주세요.</p>
+                </div>
+                
+                <div class="mt-4">
+                  <input
+                    v-model="currentPassword"
+                    type="password"
+                    placeholder="현재 비밀번호"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-500"
+                    @keyup.enter="handleDeleteAccount"
+                  />
+                </div>
+                
+                <div class="flex justify-end space-x-3 mt-6">
+                  <button 
+                    @click="closePasswordDialog"
+                    class="px-4 py-2 text-gray-600 hover:text-gray-800"
+                  >
+                    취소
+                  </button>
+                  <button 
+                    @click="handleDeleteAccount"
+                    class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                  >
+                    확인
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -129,6 +165,9 @@
   const password = ref('')
   const passwordConfirm = ref('')
   const isPasswordTouched = ref(false);
+
+  const showPasswordConfirmDialog = ref(false)
+const currentPassword = ref('')
   
   const passwordMatch = computed(() => {
     if (!passwordConfirm.value) return true
@@ -262,20 +301,42 @@
     }
   }
   
-  const confirmDelete = async () => {
-    if (confirm('정말 탈퇴하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
-      try {
+  const closePasswordDialog = () => {
+  showPasswordConfirmDialog.value = false
+  currentPassword.value = ''
+}
+
+// confirmDelete 함수 수정
+const confirmDelete = async () => {
+  showPasswordConfirmDialog.value = true
+}
+
+// handleDeleteAccount 함수 추가
+const handleDeleteAccount = async () => {
+  try {
+    const isValid = await userStore.verifyPassword(currentPassword.value)
+    if (isValid) {
+      if (confirm('정말 탈퇴하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
         const userId = userProfile.value.id
         await userStore.deleteAccount(userId)
         await userStore.logout()
         alert('탈퇴가 완료되었습니다. 이용해 주셔서 감사합니다.')
-        router.push('/singup')
-      } catch(error) {
-        console.error('계정 탈퇴 실패:', error)
-        alert('탈퇴 시도에 실패했습니다.')
-      }      
-    }  
+        router.push('/signup')
+      }
+    } else {
+      alert('비밀번호가 일치하지 않습니다.')
+    }
+    closePasswordDialog()
+  } catch (error) {
+    console.error('회원 탈퇴 처리 실패:', error)
+    if (error.response && error.response.status === 400) {
+      alert('비밀번호가 일치하지 않습니다.')
+    } else {
+      alert('처리 중 오류가 발생했습니다.')
+    }
+    closePasswordDialog()
   }
+}
   
   onMounted(async () => {
     try {
