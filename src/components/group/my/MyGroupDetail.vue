@@ -279,7 +279,7 @@ const fetchMembers = async () => {
   
   // 관리자 페이지로 이동
   const goToAdminPage = () => {
-    router.push(`/group-admin/${route.params.id}`)
+    router.push(`/group-admin/${groupId.value}`)
   }
 
   const confirmLeaveGroup = async () => {

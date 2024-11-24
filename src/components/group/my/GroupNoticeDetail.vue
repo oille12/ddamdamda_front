@@ -90,7 +90,7 @@
         <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
           <div class="p-8">
             <h2 class="text-lg font-bold text-gray-900 mb-6">
-              댓글 {{ comments.length }}
+              댓글 {{ totalComments }}
             </h2>
   
             <!-- 댓글 작성 -->
@@ -210,6 +210,7 @@
   const newComment = ref('')
   const currentPage = ref(1)
   const totalPages = ref(0)
+  const totalComments = ref(0)
   const groupInfo = ref(null)
   
   const gnoticeId = computed(() => route.params.gnoticeId)
@@ -260,6 +261,8 @@ const fetchComments = async (page = 1) => {
       pageNum: page,
       pageSize: 5  // 한 페이지당 5개 댓글
     })
+
+    totalComments.value = response.total
     
     // 각 댓글에 대해 사용자 정보를 가져와서 추가
     comments.value = await Promise.all(

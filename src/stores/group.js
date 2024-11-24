@@ -128,19 +128,13 @@ export const useGroupStore = defineStore('group', {
       }
     },
 
-    async updateGroup(groupData, imageFile = null) {
+    async updateGroup(formData) {
       try {
-        const formData = new FormData()
-        
-        formData.append('groupInfo', new Blob([JSON.stringify(groupData)], {
-          type: 'application/json'
-        }))
-        
-        if (imageFile) {
-          formData.append('imageFile', imageFile)
-        }
-
-        const response = await api.put('/groupinfo', formData)
+        const response = await api.put('/groupinfo', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        })
         return response.data
       } catch (error) {
         console.error('그룹 수정 에러:', error)
@@ -166,6 +160,19 @@ export const useGroupStore = defineStore('group', {
       } catch (error) {
         console.error('그룹 멤버 조회 실패:', error)
         return []
+      }
+    },
+
+    async getGroupMemberCreatedAt(groupId, userId) {
+      try {
+        const response = await api.post(`/groupmembers/${groupId}`, {
+          groupId,
+          userId
+        })
+        return response.data
+      } catch (error) {
+        console.error('멤버 가입일 조회 실패:', error)
+        return null
       }
     },
 
@@ -270,6 +277,20 @@ export const useGroupStore = defineStore('group', {
         return response.data
       } catch (error) {
         console.error('공지사항 삭제 에러:', error)
+        throw error
+      }
+    },
+
+    async updateGroupNotice(formData) {
+      try {
+        const response = await api.put('/groupnotice', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        })
+        return response.data
+      } catch (error) {
+        console.error('공지사항 수정 에러:', error)
         throw error
       }
     },

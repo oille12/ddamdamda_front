@@ -14,6 +14,8 @@ import MyGroupView from '@/views/MyGroupView.vue'
 import MyGroupDetail from '@/components/group/my/MyGroupDetail.vue'
 import GroupNoticeWrite from '@/components/group/my/GroupNoticeWrite.vue'
 import GroupNoticeDetail from '@/components/group/my/GroupNoticeDetail.vue'
+import GroupNoticeEdit from '@/components/group/my/GroupNoticeEdit.vue'
+import MyGroupAdmin from '@/components/group/my/MyGroupAdmin.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -100,7 +102,18 @@ const router = createRouter({
       component: GroupNoticeDetail,
       props: true
     },
-
+    {
+      path: '/group-notice-edit/:gnoticeId',
+      name: 'GroupNoticeEdit',
+      component: GroupNoticeEdit,
+      meta: { requiresAuth: true }  // 인증 필요
+    },
+    {
+      path: '/group-admin/:groupId',
+      name: 'MyGroupAdmin',
+      component: MyGroupAdmin,
+      meta: { requiresAuth: true }  // 인증 필요
+    },
   ]
 })
 
