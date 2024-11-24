@@ -153,7 +153,11 @@ const handleOutsideClick = (event) => {
 }
 
 const logout = async () => {
-  await userStore.logout()
+
+  await userStore.logout() // store의 logout이 완료될 때까지 기다립니다
+  showProfile.value = false
+  await router.replace('/')
+  
 }
 
 onMounted(() => {

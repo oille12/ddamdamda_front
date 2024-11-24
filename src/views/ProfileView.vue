@@ -321,7 +321,7 @@ const handleDeleteAccount = async () => {
         await userStore.deleteAccount(userId)
         await userStore.logout()
         alert('탈퇴가 완료되었습니다. 이용해 주셔서 감사합니다.')
-        router.push('/signup')
+        router.replace('/')
       }
     } else {
       alert('비밀번호가 일치하지 않습니다.')
