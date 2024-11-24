@@ -401,8 +401,6 @@ const loadStatistics = async () => {
       routine.getCompletedRoutineCount(userStore.user.id, formattedDate)
     ])
 
-    // 통계 데이터 업데이트
-    // ... 통계 관련 상태 업데이트 로직
   } catch (error) {
     console.error('통계 데이터 로드 실패:', error)
   }

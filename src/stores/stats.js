@@ -22,7 +22,7 @@ export const useStatsStore = defineStore('stats', {
     async getWeeklyProgress(selectedDate, userId) {
       try {
         this.isLoading = true
-        console.log('주간 데이터 로드 시작:', { selectedDate, userId })
+        // console.log('주간 데이터 로드 시작:', { selectedDate, userId })
 
         const start = startOfWeek(selectedDate, { weekStartsOn: 1 })
         const end = endOfWeek(selectedDate, { weekStartsOn: 1 })
@@ -38,11 +38,11 @@ export const useStatsStore = defineStore('stats', {
                 routine.getCompletedRoutineCount(userId, formattedDate)
               ])
               
-              console.log('날짜별 데이터:', {
-                date: formattedDate,
-                total: totalCount,
-                completed: completedCount
-              })
+              // console.log('날짜별 데이터:', {
+              //   date: formattedDate,
+              //   total: totalCount,
+              //   completed: completedCount
+              // })
       
               const progressRate = totalCount > 0 
                 ? Math.round((completedCount / totalCount) * 100)
@@ -73,7 +73,7 @@ export const useStatsStore = defineStore('stats', {
             
             // 1. 선택된 날짜의 루틴 조회
             const dailyRoutines = await routine.getRoutinesByDate(userId, formattedDate)
-            console.log('조회된 일일 루틴:', dailyRoutines)
+            // console.log('조회된 일일 루틴:', dailyRoutines)
     
             if (!dailyRoutines || dailyRoutines.length === 0) {
               this.topParts = []
@@ -82,7 +82,7 @@ export const useStatsStore = defineStore('stats', {
     
             // 2. 모든 운동 정보 조회
             const exerciseList = await exercises.getAllExercises()
-            console.log('전체 운동 목록:', exerciseList)
+            // console.log('전체 운동 목록:', exerciseList)
     
             // 3. exercisesId를 키로 하는 Map 생성
             const exerciseMap = new Map(
@@ -98,7 +98,7 @@ export const useStatsStore = defineStore('stats', {
               }
             })
             
-            console.log('부위별 카운트:', partCounts)
+            // console.log('부위별 카운트:', partCounts)
     
             // 5. 가장 많은 카운트를 가진 부위(들) 찾기
             if (Object.keys(partCounts).length === 0) {
@@ -111,7 +111,7 @@ export const useStatsStore = defineStore('stats', {
               .filter(([_, count]) => count === maxCount)
               .map(([part]) => part)
     
-            console.log('최다 빈도 부위:', topParts)
+            // console.log('최다 빈도 부위:', topParts)
             
             this.topParts = topParts
             return topParts
@@ -169,7 +169,7 @@ export const useStatsStore = defineStore('stats', {
       try {
         this.isLoading = true
         this.error = null
-        console.log('통계 데이터 로드 시작:', { selectedDate, userId })
+        // console.log('통계 데이터 로드 시작:', { selectedDate, userId })
 
         await Promise.all([
           this.getWeeklyProgress(selectedDate, userId),

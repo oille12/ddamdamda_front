@@ -23,6 +23,10 @@ const props = defineProps({
   weeklyData: {
     type: Object,
     required: true
+  },
+  fullWidth: {
+    type: Boolean,
+    default: true  // 다이어리 페이지를 위해 기본값은 true
   }
 })
 
@@ -59,7 +63,9 @@ const chartOptions = {
 </script>
 
 <template>
-  <div class="stat-card bg-black p-4 shadow-lg col-span-2 rounded-2xl">
+  <div class="stat-card bg-black p-4 shadow-lg col-span-2 rounded-2xl"
+    :class="{ 'col-span-2': fullWidth }"
+  >
     <div class="flex items-center justify-between mb-2">
       <h3 class="text-sm font-medium text-white">주간 운동 현황</h3>
       <div class="px-2 py-1 rounded-full text-xs font-medium text-black" 
