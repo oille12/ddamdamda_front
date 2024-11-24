@@ -51,24 +51,7 @@
              </svg>
            </router-link>
            <!-- Notifications -->
-           <div class="relative">
-             <!-- Notification Icon -->
-             <button @click="toggleNotifications" class="relative">
-               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                       d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-               </svg>
-               <span v-if="notificationCount" 
-                     class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full text-xs px-1">
-                 {{ notificationCount }}
-               </span>
-             </button>
-             <!-- Notifications Dropdown -->
-             <div v-if="showNotifications" 
-                  class="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg py-2">
-               <!-- Notification Items -->
-             </div>
-           </div>
+           <NoticeView @toggle="handleNotificationToggle" />
            <!-- Profile -->
            <div class="relative" ref="profileDropdown">
              <button @click="toggleProfile" 
@@ -127,6 +110,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { storeToRefs } from 'pinia'
+import NoticeView from './views/NoticeView.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -134,8 +118,13 @@ const userStore = useUserStore()
 const { profileImageUrl } = storeToRefs(userStore)
 const showNotifications = ref(false)
 const showProfile = ref(false)
-const notificationCount = ref(0)
 const profileDropdown = ref(null)
+
+const handleNotificationToggle = (isOpen) => {
+  if (isOpen) {
+    showProfile.value = false
+  }
+}
 
 const navLinks = [
  { path: '/board', name: '게시판' },
