@@ -29,22 +29,26 @@ const router = createRouter({
     {
       path: '/board',
       name: 'board',
-      component: BoardView
+      component: BoardView,
+      meta: { requiresAuth: true }
     },
     {
       path: '/board/:id',
       name: 'boardDetail',
-      component: BoardDetail
+      component: BoardDetail,
+      meta: { requiresAuth: true }
     },
     {
       path: '/board/write',
       name: 'boardWrite',
-      component: BoardWrite
+      component: BoardWrite,
+      meta: { requiresAuth: true }
     },
     {
       path: '/board/:id/edit',
       name: 'boardEdit',
-      component: BoardEdit
+      component: BoardEdit,
+      meta: { requiresAuth: true }
     },
     {
       path: '/login',
@@ -54,7 +58,8 @@ const router = createRouter({
     {
       path: '/profile',
       name: 'profile',
-      component: ProfileView
+      component: ProfileView,
+      meta: { requiresAuth: true }
     },
     {
       path: '/group',
@@ -62,12 +67,14 @@ const router = createRouter({
         {
           path: '',
           name: 'GroupView',
-          component: GroupView
+          component: GroupView,
+          meta: { requiresAuth: true }
         },
         {
           path: 'write',
           name: 'GroupInfoWrite',
-          component: GroupInfoWrite
+          component: GroupInfoWrite,
+          meta: { requiresAuth: true }
         }
       ]
     },
@@ -79,28 +86,33 @@ const router = createRouter({
     {
       path: '/diary',
       name: 'diary',
-      component: DiaryView
+      component: DiaryView,
+      meta: { requiresAuth: true }
     },
     {
       path: '/mygroups',
       name: 'mygroups',
-      component: MyGroupView
+      component: MyGroupView,
+      meta: { requiresAuth: true }
     },
     {
       path: '/mygroups-detail/:groupId',
       name: 'MyGroupDetail',
-      component: MyGroupDetail
+      component: MyGroupDetail,
+      meta: { requiresAuth: true }
     },
     {
       path: '/group-notice-write/:groupId',
       name: 'GroupNoticeWrite',
       component: GroupNoticeWrite,
+      meta: { requiresAuth: true },
       props: true
     },
     {
       path: '/group-notice-detail/:gnoticeId',
       name: 'GroupNoticeDetail',
       component: GroupNoticeDetail,
+      meta: { requiresAuth: true },
       props: true
     },
     {
@@ -116,6 +128,23 @@ const router = createRouter({
       meta: { requiresAuth: true }  // 인증 필요
     },
   ]
+})
+
+router.beforeEach((to, from, next) => {
+  const token = localStorage.getItem('token')
+  
+  // 인증이 필요한 페이지에 접근하는 경우
+  if (to.meta.requiresAuth && !token) {
+    next('/login')
+  } 
+  // 이미 로그인한 사용자가 로그인 페이지에 접근하는 경우
+  else if (to.path === '/login' && token) {
+    next('/')
+  }
+  // 그 외의 경우
+  else {
+    next()
+  }
 })
 
 export default router
