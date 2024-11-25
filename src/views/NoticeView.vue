@@ -162,6 +162,7 @@
 }
   
 onMounted(() => {
+  window.scrollTo(0, 0)
   fetchNotifications()  // 알림 목록 로드
   document.addEventListener('click', handleClickOutside)
 })

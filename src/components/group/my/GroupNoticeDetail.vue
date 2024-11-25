@@ -400,6 +400,7 @@ selectedImage.value = image
 }
   
   onMounted(async () => {
+    window.scrollTo(0, 0)
     await Promise.all([
       fetchNotice(),
       fetchComments(),

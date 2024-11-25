@@ -412,6 +412,7 @@ const formatDate = (dateString) => {
 
 // 컴포넌트 마운트 시 데이터 로드
 onMounted(async () => {
+  window.scrollTo(0, 0)
   await Promise.all([
     loadGroupData(),
     loadMembers()

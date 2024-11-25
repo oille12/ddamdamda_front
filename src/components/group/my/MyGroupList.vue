@@ -44,6 +44,7 @@
   const userStore = useUserStore()
   
   onMounted(async () => {
+    window.scrollTo(0, 0)
     if (userStore.user?.id) {
       await groupStore.fetchMyGroups(userStore.user.id)
     }

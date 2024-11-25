@@ -208,6 +208,7 @@ const checkMembership = async () => {
 }
 
 onMounted(async () => {
+  window.scrollTo(0, 0)
   if (props.group.groupImg) {
     imageUrl.value = await groupStore.getGroupImage(props.group.groupImg)
   }

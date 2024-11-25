@@ -203,7 +203,7 @@
 </template>
 
 <script setup>
-import { ref, onUnmounted, computed, watch } from 'vue'
+import { ref, onUnmounted, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useBoardStore } from '@/stores/board'
@@ -358,5 +358,9 @@ onUnmounted(() => {
       URL.revokeObjectURL(image.imageUrl)
     }
   })
+})
+
+onMounted(() => {
+  window.scrollTo(0, 0)
 })
 </script>

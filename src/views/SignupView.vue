@@ -143,7 +143,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { debounce } from 'lodash'
@@ -301,6 +301,10 @@ const handleSignup = async () => {
         isSubmitting.value = false
     }
 }
+
+onMounted(() => {
+  window.scrollTo(0, 0)
+})
 </script>
 
 <style scoped>

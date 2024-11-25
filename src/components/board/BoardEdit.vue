@@ -223,6 +223,7 @@ const cancel = () => {
 }
 
 onMounted(() => {
+  window.scrollTo(0, 0)
  loadBoard()
 })
 </script>

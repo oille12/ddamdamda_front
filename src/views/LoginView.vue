@@ -49,7 +49,7 @@
   </template>
   
   <script setup>
-  import { ref } from 'vue'
+  import { ref, onMounted } from 'vue'
   import { useRouter } from 'vue-router'
   import { useUserStore } from '@/stores/user'
   
@@ -71,4 +71,8 @@
       alert('등록되지 않은 아이디이거나 아이디 또는 비밀번호를 잘못 입력했습니다.')
     }
   }
+
+  onMounted(() => {
+  window.scrollTo(0, 0)
+})
   </script>

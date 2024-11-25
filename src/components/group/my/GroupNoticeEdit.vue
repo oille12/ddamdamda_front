@@ -268,6 +268,7 @@
   
   // 초기 데이터 로드
   onMounted(() => {
+    window.scrollTo(0, 0)
     loadNoticeData()
   })
   </script>

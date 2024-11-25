@@ -234,6 +234,7 @@ const handleJoin = async (groupId) => {
 }
 
 onMounted(() => {
+  window.scrollTo(0, 0)
   fetchGroups()
 })
 </script>

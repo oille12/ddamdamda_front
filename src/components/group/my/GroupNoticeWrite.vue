@@ -100,7 +100,7 @@
   </template>
   
 <script setup>
-  import { ref, computed } from 'vue'
+  import { ref, computed, onMounted } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { useGroupStore } from '@/stores/group'
   
@@ -190,4 +190,8 @@
         submitting.value = false
     }
   }
+
+  onMounted(() => {
+  window.scrollTo(0, 0)
+})
 </script>

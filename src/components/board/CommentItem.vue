@@ -29,7 +29,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useUserStore } from '@/stores/user'
 
 const props = defineProps({
@@ -65,4 +65,8 @@ const saveEdit = () => {
  })
  isEditing.value = false
 }
+
+onMounted(() => {
+  window.scrollTo(0, 0)
+})
 </script>

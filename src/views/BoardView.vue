@@ -23,6 +23,7 @@ import { useUserStore } from '@/stores/user'
 const userStore = useUserStore()
 
 onMounted(async () => {
+  window.scrollTo(0, 0)
  // 사용자 인증 상태 체크
  if (!userStore.isAuthenticated) {
    const token = localStorage.getItem('token')

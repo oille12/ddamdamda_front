@@ -343,6 +343,8 @@ const handleDeleteAccount = async () => {
       await userStore.getCurrentUserProfile()
       await loadProfileImage()
 
+      window.scrollTo(0, 0)
+
       originalUsername.value = userProfile.value.username
       isPasswordTouched.value = false
       isUsernameTouched.value = false

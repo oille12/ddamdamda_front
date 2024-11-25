@@ -295,6 +295,7 @@ const fetchMembers = async () => {
 }
   
   onMounted(async () => {
+    window.scrollTo(0, 0)
     await Promise.all([
       fetchGroupInfo(),
       fetchNotices(),

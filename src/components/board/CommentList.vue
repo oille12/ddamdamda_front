@@ -100,6 +100,7 @@ const deleteComment = async (commentId) => {
 }
 
 onMounted(() => {
+  window.scrollTo(0, 0)
  loadComments()
 })
 </script>

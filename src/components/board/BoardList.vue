@@ -171,6 +171,7 @@ watch(category, () => {
 })
 
 onMounted(() => {
+  window.scrollTo(0, 0)
   loadAllBoards()
 })
 </script>
