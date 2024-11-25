@@ -304,7 +304,7 @@
               v-for="video in limitedVideos" 
               :key="video.id"
               class="stat-card bg-white shadow-lg hover:shadow-xl overflow-hidden rounded-2xl cursor-pointer"
-              @click="handleShowVideo(video)"
+              @click="() => handleShowVideo(video)"
             >
               <!-- Video -->
               <div class="relative w-full aspect-video">
@@ -704,15 +704,21 @@ const selectDate = async (date) => {
   await loadRoutinesByDate(date)
 }
 
-const handleShowVideo = (video) => {
-  if (!video) {
-    console.error('Video object is undefined')
+const handleShowVideo = (videoOrTitle) => {
+  console.error('Video object is undefined')
+
+  if (typeof videoOrTitle === 'string') {
+    selectedExerciseTitle.value = videoOrTitle
+  }
+  
+ else if (videoOrTitle?.title) {
+    selectedExerciseTitle.value = videoOrTitle.title
+  } else {
+    console.error('Invalid video data:', videoOrTitle)
     return
   }
   
-  selectedExerciseTitle.value = video.title
   showVideoModal.value = true
-  console.log('Opening modal for video:', video.title)
 }
 
 const closeVideoModal = () => {
