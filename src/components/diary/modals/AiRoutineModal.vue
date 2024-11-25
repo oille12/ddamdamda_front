@@ -95,7 +95,7 @@ const startLoadingAnimation = () => {
     } else {
       currentLoadingStep.value = 0
     }
-  }, 2000)
+  }, 8000)
 }
 
 const stopLoadingAnimation = () => {
