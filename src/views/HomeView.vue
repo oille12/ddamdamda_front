@@ -1032,11 +1032,18 @@ const chartData = computed(() => {
 })
 
 const partsData = computed(() => {
+  let data
   if (userStore.isAuthenticated) {
-    if (!partStats.value) return []
-    return partStats.value?.slice(0, 3) || []
+    data = partStats.value?.slice(0, 3) || []
+  } else {
+    data = demoData.exerciseParts.slice(0, 3)
   }
-  return demoData.exerciseParts.slice(0, 3)
+  const dummyItem = { part: ' - ', count: 0, percentage: 0 }
+  while (data.length < 3) {
+    data.push({ ...dummyItem })
+  }
+  
+  return data
 })
 
 onMounted(async () => {
