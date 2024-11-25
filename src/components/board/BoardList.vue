@@ -71,7 +71,7 @@
       <button
         v-for="page in totalPages"
         :key="page"
-        class="w-8 h-8 rounded-full"
+        class="w-8 h-8 rounded-md"
         :class="[
         'px-3 py-1 mx-1 rounded',
         currentPage === page 
