@@ -1047,6 +1047,7 @@ const partsData = computed(() => {
 })
 
 onMounted(async () => {
+  window.scrollTo(0, 0)
     await loadInitialData()
     await videoStore.fetchVideos()
     if (isAuthenticated.value) {
