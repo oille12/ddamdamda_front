@@ -1,17 +1,20 @@
 # 🏋️‍♂️ DdamDamDa (땀담다)
 
-> 내 운동 일정을 기록하고, 공유하며 함께 성장하는 피트니스 소셜 플랫폼
+내 운동 일정을 기록하고, 공유하며 함께 성장하는 피트니스 소셜 플랫폼  
+<br>
 
 ## 📝 프로젝트 소개
 
-DdamDamDa는 운동을 사랑하는 모든 사람들을 위한 종합 피트니스 플랫폼입니다. 개인의 운동 일정 관리부터 운동 메이트 찾기, 커뮤니티 활동까지 - 당신의 건강한 라이프스타일을 위한 모든 것을 담았습니다.
+> ### [최종 PPT 보러가기](산출물/땀담다_전체페이지.pptx)
+DdamDamDa는 운동을 사랑하는 모든 사람들을 위한 종합 피트니스 플랫폼입니다. 개인의 운동 일정 관리부터 운동 메이트 찾기, 커뮤니티 활동까지 - 당신의 건강한 라이프스타일을 위한 모든 것을 담았습니다.  
+<br>
 
 ## 📝 참고자료
 
-### [팀 노션 페이지](https://www.notion.so/PJT-136634ecbbc48068a295efd5d3e5fcb5?pvs=4)
+> ### [팀 노션 페이지](https://www.notion.so/PJT-136634ecbbc48068a295efd5d3e5fcb5?pvs=4)
 
-### [요구사항 정의서](https://docs.google.com/spreadsheets/d/16uS-oSijpuOd-1RVGpClQE0FbH4ZhtV82RlkieFNbzw/edit?usp=sharing)
-
+> ### [요구사항 정의서](https://docs.google.com/spreadsheets/d/16uS-oSijpuOd-1RVGpClQE0FbH4ZhtV82RlkieFNbzw/edit?usp=sharing)
+<br>
 
 <div align=center><h1>📚 STACKS</h1></div>
 <div align=center> 
@@ -59,6 +62,7 @@ DdamDamDa는 운동을 사랑하는 모든 사람들을 위한 종합 피트니�
    - 자유로운 피트니스 정보 공유
    - 운동 인증 게시판
    - 좋아요, 댓글 기능을 통한 활발한 소통
+<br>
 
 ## 💾 데이터베이스 설계
 
@@ -109,7 +113,7 @@ DdamDamDa는 운동을 사랑하는 모든 사람들을 위한 종합 피트니�
 - **Token**
   - 사용자 인증을 위한 JWT 토큰 관리
   - Access Token과 Refr
-  
+  <br>
 
 ## 📝 업데이트 내역
 ### 📌 ~ 2024-11-18
@@ -238,3 +242,5 @@ DdamDamDa는 운동을 사랑하는 모든 사람들을 위한 종합 피트니�
    - UML 이미지 업데이트
    - ERD 이미지 업데이트
 
+---
+> ### [최종 PPT 보러가기](산출물/땀담다_전체페이지.pptx)
